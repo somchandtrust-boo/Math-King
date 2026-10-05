@@ -1,1 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 256 256">
 
+  <rect
+    width="256"
+    height="256"
+    rx="56"
+    fill="#07111f"/>
+
+  <rect
+    x="35"
+    y="35"
+    width="186"
+    height="186"
+    rx="38"
+    fill="#102844"
+    stroke="#38bdf8"
+    stroke-width="8"/>
+
+  <text
+    x="128"
+    y="125"
+    text-anchor="middle"
+    font-family="Arial, sans-serif"
+    font-size="70"
+    font-weight="900"
+    fill="#ffffff">
+    MK
+  </text>
+
+  <text
+    x="128"
+    y="175"
+    text-anchor="middle"
+    font-family="Arial, sans-serif"
+    font-size="32"
+    font-weight="700"
+    fill="#38bdf8">
+    ∑ π √
+  </text>
+
+</svg>
