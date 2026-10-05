@@ -2,256 +2,156 @@
 <html lang="en">
 <head>
 
-    <!-- =========================================================
-         MATH KING
-         Android + iPhone + Desktop PWA Ready
-         ========================================================= -->
+<meta charset="UTF-8">
 
-    <meta charset="UTF-8">
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-    >
+<title>Math King — Real Mathematics Solver</title>
 
-    <meta
-        name="description"
-        content="Math King - Real Mathematics Question Solver with detailed step-by-step solutions."
-    >
+<meta
+    name="description"
+    content="Math King is a real mathematics solver with detailed step-by-step solutions, voice input and calculator-style math keyboard."
+>
 
-    <meta
-        name="keywords"
-        content="Math King, mathematics solver, math calculator, step by step math, Hindi math solver, English math solver"
-    >
+<meta name="theme-color" content="#07111f">
 
-    <meta name="author" content="Math King">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Math King">
 
-    <!-- =========================================================
-         PWA
-         ========================================================= -->
+<link rel="manifest" href="manifest.json">
 
-    <meta name="theme-color" content="#07111f">
+<link
+    rel="apple-touch-icon"
+    href="icons/apple-touch-icon.png"
+>
 
-    <link rel="manifest" href="./manifest.json">
-
-    <!-- Android -->
-    <meta
-        name="mobile-web-app-capable"
-        content="yes"
-    >
-
-    <!-- iPhone / iPad -->
-    <meta
-        name="apple-mobile-web-app-capable"
-        content="yes"
-    >
-
-    <meta
-        name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent"
-    >
-
-    <meta
-        name="apple-mobile-web-app-title"
-        content="Math King"
-    >
-
-    <!-- iPhone Home Screen Icon -->
-    <link
-        rel="apple-touch-icon"
-        href="./icons/apple-touch-icon.png"
-    >
-
-    <!-- Fallback icon -->
-    <link
-        rel="icon"
-        type="image/png"
-        sizes="192x192"
-        href="./icons/icon-192.png"
-    >
-
-    <link
-        rel="icon"
-        type="image/png"
-        sizes="512x512"
-        href="./icons/icon-512.png"
-    >
-
-    <!-- =========================================================
-         IOS SAFE AREA SUPPORT
-         ========================================================= -->
-
-    <meta
-        name="format-detection"
-        content="telephone=no"
-    >
-
-    <!-- =========================================================
-         TITLE
-         ========================================================= -->
-
-    <title>Math King — Real Mathematics Solver</title>
-
-    <!-- =========================================================
-         MAIN CSS
-         ========================================================= -->
-
-    <link
-        rel="stylesheet"
-        href="./style.css"
-    >
+<link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-    <!-- =========================================================
-         APP SAFE AREA
-         ========================================================= -->
+<div class="app-shell">
 
-    <div class="app-shell">
+    <!-- HEADER -->
+    <header class="app-header">
 
-        <!-- =====================================================
-             HEADER
-             ===================================================== -->
+        <div class="brand-area">
 
-        <header class="app-header">
+            <div class="brand-icon">
+                👑
+            </div>
 
-            <div class="brand-area">
+            <div class="brand-text">
+                <h1>Math King</h1>
+                <p id="appSubtitle">
+                    Real Mathematics Question Solver
+                </p>
+            </div>
 
-                <div class="brand-icon">
-                    👑
-                </div>
+        </div>
 
-                <div class="brand-text">
 
-                    <h1 id="appTitle">
-                        Math Auto Solver
-                    </h1>
+        <div class="language-switch">
 
-                    <p id="appSubtitle">
-                        Real Mathematics Question Solver
+            <button
+                type="button"
+                id="englishBtn"
+                class="language-btn active"
+            >
+                English
+            </button>
+
+            <button
+                type="button"
+                id="hindiBtn"
+                class="language-btn"
+            >
+                हिन्दी
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="main-container">
+
+        <section class="solver-card">
+
+            <div class="section-heading">
+
+                <div>
+                    <h2 id="questionTitle">
+                        Enter Mathematics Question
+                    </h2>
+
+                    <p id="questionHint">
+                        Type, speak, or use the Math Keyboard.
                     </p>
-
                 </div>
 
             </div>
 
 
-            <!-- LANGUAGE -->
-            <div class="language-switch">
+            <!-- QUESTION + KEYBOARD -->
+            <div class="solver-workspace">
 
-                <button
-                    id="englishBtn"
-                    class="language-btn active"
-                    type="button"
-                >
-                    English
-                </button>
+                <!-- QUESTION AREA -->
+                <div class="question-area">
 
-                <button
-                    id="hindiBtn"
-                    class="language-btn"
-                    type="button"
-                >
-                    हिंदी
-                </button>
-
-            </div>
-
-        </header>
-
-
-        <!-- =====================================================
-             MAIN
-             ===================================================== -->
-
-        <main class="main-container">
-
-
-            <!-- =================================================
-                 SOLVER CARD
-                 ================================================= -->
-
-            <section class="solver-card">
-
-                <div class="section-heading">
-
-                    <span class="section-icon">
-                        🧮
-                    </span>
-
-                    <div>
-
-                        <h2 id="questionTitle">
-                            Enter Your Math Question
-                        </h2>
-
-                        <p id="questionSubtitle">
-                            Type or speak your mathematics question
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- =============================================
-                     QUESTION INPUT
-                     ============================================= -->
-
-                <div class="question-wrapper">
+                    <label
+                        for="question"
+                        id="questionLabel"
+                    >
+                        Your Question
+                    </label>
 
                     <textarea
                         id="question"
-                        rows="5"
+                        rows="6"
                         autocomplete="off"
                         autocorrect="off"
-                        autocapitalize="off"
                         spellcheck="false"
-                        placeholder="Example: (-6) × (-4) + (-20) ÷ 4"
-                        aria-label="Math question"
+                        placeholder="Example: Evaluate (-6) × (-4) + (-20) ÷ 4"
                     ></textarea>
 
 
-                    <!-- VOICE BUTTON -->
+                    <!-- VOICE -->
+                    <div class="voice-area">
 
-                    <button
-                        id="micBtn"
-                        class="mic-button"
-                        type="button"
-                        aria-label="Voice input"
-                    >
+                        <button
+                            type="button"
+                            id="micBtn"
+                            class="mic-btn"
+                        >
 
-                        <span id="micIcon">
-                            🎤
+                            <span id="micIcon">🎤</span>
+
+                            <span id="micText">
+                                Voice Input
+                            </span>
+
+                        </button>
+
+                        <span
+                            id="voiceStatus"
+                            class="voice-status"
+                        >
+                            Ready
                         </span>
 
-                        <span id="micText">
-                            Voice
-                        </span>
-
-                    </button>
-
-                </div>
+                    </div>
 
 
-                <!-- VOICE STATUS -->
-
-                <div
-                    id="voiceStatus"
-                    class="voice-status"
-                    aria-live="polite"
-                ></div>
-
-
-                <!-- =============================================
-                     STANDARD / CLASS
-                     ============================================= -->
-
-                <div class="form-row">
-
-                    <div class="form-group">
+                    <!-- STANDARD -->
+                    <div class="standard-area">
 
                         <label
                             for="standard"
@@ -262,601 +162,527 @@
 
                         <select id="standard">
 
-                            <option value="all">
-                                All Levels
-                            </option>
-
-                            <option value="primary">
-                                Primary
+                            <option value="basic">
+                                Basic Mathematics
                             </option>
 
                             <option value="middle">
                                 Middle School
                             </option>
 
-                            <option value="secondary">
-                                Secondary
+                            <option value="high">
+                                High School
                             </option>
 
-                            <option value="higher">
-                                Higher Secondary
-                            </option>
-
-                            <option value="college">
-                                College
+                            <option value="advanced">
+                                Advanced Mathematics
                             </option>
 
                         </select>
 
                     </div>
 
-                </div>
 
-
-                <!-- =============================================
-                     ACTION BUTTONS
-                     ============================================= -->
-
-                <div class="action-buttons">
-
-                    <button
-                        id="solveBtn"
-                        class="primary-btn"
-                        type="button"
-                    >
-                        🧮 Solve
-                    </button>
-
-                    <button
-                        id="clearBtn"
-                        class="secondary-btn"
-                        type="button"
-                    >
-                        🗑️ Clear
-                    </button>
-
-                </div>
-
-
-                <!-- =============================================
-                     EXAMPLES
-                     ============================================= -->
-
-                <div class="examples-section">
-
-                    <h3 id="examplesTitle">
-                        Try Examples
-                    </h3>
-
-                    <div class="example-grid">
+                    <!-- ACTIONS -->
+                    <div class="main-actions">
 
                         <button
                             type="button"
-                            class="example-btn"
-                            data-example="(-6) × (-4) + (-20) ÷ 4"
+                            id="solveBtn"
+                            class="primary-btn"
                         >
-                            (-6) × (-4) + (-20) ÷ 4
+                            🧮 Solve
                         </button>
 
                         <button
                             type="button"
-                            class="example-btn"
-                            data-example="25% of 800"
+                            id="clearBtn"
+                            class="secondary-btn"
                         >
-                            25% of 800
-                        </button>
-
-                        <button
-                            type="button"
-                            class="example-btn"
-                            data-example="√144"
-                        >
-                            √144
-                        </button>
-
-                        <button
-                            type="button"
-                            class="example-btn"
-                            data-example="Find HCF of 24 and 36"
-                        >
-                            HCF of 24, 36
-                        </button>
-
-                        <button
-                            type="button"
-                            class="example-btn"
-                            data-example="Find LCM of 12 and 18"
-                        >
-                            LCM of 12, 18
-                        </button>
-
-                        <button
-                            type="button"
-                            class="example-btn"
-                            data-example="Solve: 2x + 5 = 15"
-                        >
-                            2x + 5 = 15
+                            🗑️ Clear
                         </button>
 
                     </div>
 
                 </div>
 
-            </section>
 
+                <!-- MATH KEYBOARD -->
+                <aside class="math-keyboard">
 
-            <!-- =================================================
-                 RESULT
-                 ================================================= -->
+                    <div class="keyboard-header">
 
-            <section
-                id="resultSection"
-                class="result-card"
-                hidden
-            >
+                        <div>
+                            <strong>🧮 Math Keyboard</strong>
 
-                <div class="result-heading">
+                            <small>
+                                Tap a symbol to insert
+                            </small>
+                        </div>
 
-                    <span class="section-icon">
-                        ✅
-                    </span>
-
-                    <h2 id="answerTitle">
-                        Answer
-                    </h2>
-
-                </div>
-
-
-                <!-- FINAL ANSWER -->
-
-                <div class="answer-box">
-
-                    <div class="answer-label">
-                        <span id="finalAnswerLabel">
-                            Final Answer
-                        </span>
-                    </div>
-
-                    <div
-                        id="answer"
-                        class="answer-value"
-                    ></div>
-
-                </div>
-
-
-                <!-- =================================================
-                     DETAILED STEPS
-                     ================================================= -->
-
-                <div class="steps-container">
-
-                    <h3 id="stepsTitle">
-                        Detailed Solution
-                    </h3>
-
-                    <div
-                        id="steps"
-                        class="steps-content"
-                    ></div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 HISTORY
-                 ================================================= -->
-
-            <section class="history-card">
-
-                <div class="history-header">
-
-                    <div class="history-title-area">
-
-                        <span class="section-icon">
-                            📚
-                        </span>
-
-                        <h2 id="historyTitle">
-                            History
-                        </h2>
+                        <button
+                            type="button"
+                            id="backspaceBtn"
+                            class="keyboard-special"
+                            title="Backspace"
+                        >
+                            ⌫
+                        </button>
 
                     </div>
 
 
-                    <button
-                        id="clearHistoryBtn"
-                        class="clear-history-btn"
-                        type="button"
-                    >
+                    <!-- NUMBERS -->
+                    <div class="key-section">
 
-                        🗑️
+                        <div class="key-section-title">
+                            Numbers
+                        </div>
 
-                        <span id="clearHistoryText">
-                            Clear History
-                        </span>
+                        <div class="math-key-grid numbers">
 
-                    </button>
+                            <button type="button" class="math-key" data-symbol="7">7</button>
+                            <button type="button" class="math-key" data-symbol="8">8</button>
+                            <button type="button" class="math-key" data-symbol="9">9</button>
 
-                </div>
+                            <button type="button" class="math-key" data-symbol="4">4</button>
+                            <button type="button" class="math-key" data-symbol="5">5</button>
+                            <button type="button" class="math-key" data-symbol="6">6</button>
 
+                            <button type="button" class="math-key" data-symbol="1">1</button>
+                            <button type="button" class="math-key" data-symbol="2">2</button>
+                            <button type="button" class="math-key" data-symbol="3">3</button>
+
+                            <button type="button" class="math-key wide-key" data-symbol="0">0</button>
+                            <button type="button" class="math-key" data-symbol=".">.</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BASIC OPERATORS -->
+                    <div class="key-section">
+
+                        <div class="key-section-title">
+                            Basic Operators
+                        </div>
+
+                        <div class="math-key-grid">
+
+                            <button type="button" class="math-key operator-key" data-symbol="+">+</button>
+
+                            <button type="button" class="math-key operator-key" data-symbol="−">−</button>
+
+                            <button type="button" class="math-key operator-key" data-symbol="×">×</button>
+
+                            <button type="button" class="math-key operator-key" data-symbol="÷">÷</button>
+
+                            <button type="button" class="math-key operator-key" data-symbol="%">%</button>
+
+                            <button type="button" class="math-key" data-symbol="=">=</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BRACKETS -->
+                    <div class="key-section">
+
+                        <div class="key-section-title">
+                            Brackets
+                        </div>
+
+                        <div class="math-key-grid">
+
+                            <button type="button" class="math-key" data-symbol="(">(</button>
+                            <button type="button" class="math-key" data-symbol=")">)</button>
+
+                            <button type="button" class="math-key" data-symbol="[">[</button>
+                            <button type="button" class="math-key" data-symbol="]">]</button>
+
+                            <button type="button" class="math-key" data-symbol="{">{</button>
+                            <button type="button" class="math-key" data-symbol="}">}</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- POWERS -->
+                    <div class="key-section">
+
+                        <div class="key-section-title">
+                            Powers & Roots
+                        </div>
+
+                        <div class="math-key-grid">
+
+                            <button type="button" class="math-key special-key" data-symbol="√">√</button>
+
+                            <button type="button" class="math-key special-key" data-symbol="^">^</button>
+
+                            <button type="button" class="math-key special-key" data-symbol="²">²</button>
+
+                            <button type="button" class="math-key special-key" data-symbol="³">³</button>
+
+                            <button type="button" class="math-key special-key" data-symbol="ⁿ">ⁿ</button>
+
+                            <button type="button" class="math-key special-key" data-symbol="!">!</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- COMPARISON -->
+                    <div class="key-section">
+
+                        <div class="key-section-title">
+                            Comparison
+                        </div>
+
+                        <div class="math-key-grid">
+
+                            <button type="button" class="math-key" data-symbol="±">±</button>
+
+                            <button type="button" class="math-key" data-symbol="≠">≠</button>
+
+                            <button type="button" class="math-key" data-symbol="<"><</button>
+
+                            <button type="button" class="math-key" data-symbol=">">></button>
+
+                            <button type="button" class="math-key" data-symbol="≤">≤</button>
+
+                            <button type="button" class="math-key" data-symbol="≥">≥</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADVANCED -->
+                    <div class="key-section">
+
+                        <div class="key-section-title">
+                            Advanced Math
+                        </div>
+
+                        <div class="math-key-grid">
+
+                            <button type="button" class="math-key" data-symbol="π">π</button>
+
+                            <button type="button" class="math-key" data-symbol="∞">∞</button>
+
+                            <button type="button" class="math-key" data-symbol="Δ">Δ</button>
+
+                            <button type="button" class="math-key" data-symbol="∑">∑</button>
+
+                            <button type="button" class="math-key" data-symbol="∏">∏</button>
+
+                            <button type="button" class="math-key" data-symbol="°">°</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FRACTIONS -->
+                    <div class="key-section">
+
+                        <div class="key-section-title">
+                            Fractions
+                        </div>
+
+                        <div class="math-key-grid">
+
+                            <button type="button" class="math-key" data-symbol="½">½</button>
+
+                            <button type="button" class="math-key" data-symbol="⅓">⅓</button>
+
+                            <button type="button" class="math-key" data-symbol="¼">¼</button>
+
+                            <button type="button" class="math-key" data-symbol="¾">¾</button>
+
+                            <button type="button" class="math-key fraction-key" data-symbol="a/b">a/b</button>
+
+                            <button type="button" class="math-key" data-symbol="|x|">|x|</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="keyboard-footer">
+
+                        <button
+                            type="button"
+                            id="deleteAllBtn"
+                            class="keyboard-clear"
+                        >
+                            Clear Keyboard
+                        </button>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </section>
+
+
+        <!-- EXAMPLES -->
+        <section class="examples-section">
+
+            <h2 id="examplesTitle">
+                Example Questions
+            </h2>
+
+            <div class="example-grid">
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="Evaluate: (-6) × (-4) + (-20) ÷ 4"
+                >
+                    (-6) × (-4) + (-20) ÷ 4
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="25% of 800"
+                >
+                    25% of 800
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="√144"
+                >
+                    √144
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="12 × 15"
+                >
+                    12 × 15
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="HCF of 24 and 36"
+                >
+                    HCF of 24 and 36
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="LCM of 12 and 18"
+                >
+                    LCM of 12 and 18
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="Average of 10, 20, 30, 40"
+                >
+                    Average of 10, 20, 30, 40
+                </button>
+
+                <button
+                    type="button"
+                    class="example-btn"
+                    data-example="2x + 5 = 15"
+                >
+                    2x + 5 = 15
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- RESULT -->
+        <section
+            id="resultSection"
+            class="result-section"
+            hidden
+        >
+
+            <div class="result-header">
+
+                <h2 id="answerTitle">
+                    Answer
+                </h2>
+
+            </div>
+
+            <div
+                id="answer"
+                class="answer-box"
+                aria-live="polite"
+            ></div>
+
+
+            <div class="steps-container">
+
+                <h3 id="stepsTitle">
+                    Detailed Solution
+                </h3>
 
                 <div
-                    id="historyList"
-                    class="history-list"
+                    id="steps"
+                    class="steps-box"
                 ></div>
 
-            </section>
+            </div>
+
+        </section>
 
 
-            <!-- =================================================
-                 PWA INSTALL CARD
-                 ================================================= -->
+        <!-- HISTORY -->
+        <section class="history-section">
 
-            <section
-                id="installCard"
-                class="install-card"
-                hidden
-            >
+            <div class="history-header">
+
+                <h2 id="historyTitle">
+                    History
+                </h2>
+
+                <button
+                    type="button"
+                    id="clearHistoryBtn"
+                    class="history-clear-btn"
+                >
+                    🗑️
+                    <span id="clearHistoryText">
+                        Clear History
+                    </span>
+                </button>
+
+            </div>
+
+
+            <div
+                id="historyList"
+                class="history-list"
+            ></div>
+
+        </section>
+
+
+        <!-- PWA INSTALL -->
+        <section class="install-card">
+
+            <div class="install-content">
 
                 <div class="install-icon">
-                    📲
+                    📱
                 </div>
 
-                <div class="install-content">
+                <div>
 
                     <h3 id="installTitle">
                         Install Math King
                     </h3>
 
                     <p id="installDescription">
-                        Install Math King on your device for quick access.
+                        Install Math King on your Android, iPhone or desktop.
                     </p>
 
                 </div>
 
-                <button
-                    id="installBtn"
-                    class="install-btn"
-                    type="button"
-                >
-                    Install
-                </button>
+            </div>
 
-            </section>
-
-
-            <!-- =================================================
-                 IOS INSTALL HELP
-                 ================================================= -->
-
-            <section
-                id="iosInstallHelp"
-                class="ios-install-help"
+            <button
+                type="button"
+                id="installBtn"
+                class="install-btn"
                 hidden
             >
+                Install App
+            </button>
 
-                <div class="ios-icon">
-                    🍎
-                </div>
-
-                <div>
-
-                    <h3>
-                        Install on iPhone
-                    </h3>
-
-                    <p>
-                        Open this website in Safari, tap
-                        <strong>Share</strong>, then choose
-                        <strong>Add to Home Screen</strong>.
-                    </p>
-
-                </div>
-
-            </section>
-
-        </main>
+        </section>
 
 
-        <!-- =====================================================
-             FOOTER
-             ===================================================== -->
+        <!-- IOS HELP -->
+        <section
+            id="iosInstallHelp"
+            class="ios-install-help"
+            hidden
+        >
 
-        <footer class="app-footer">
+            <strong>
+                🍎 iPhone / iPad
+            </strong>
 
-            <p id="footerText">
-                Math King • Real Mathematics Solver
+            <p>
+                Safari में Share दबाएँ → Add to Home Screen चुनें।
             </p>
 
-            <p class="offline-status">
-                <span id="connectionDot">●</span>
-                <span id="connectionText">
-                    Online
-                </span>
-            </p>
+        </section>
 
-        </footer>
-
-    </div>
+    </main>
 
 
-    <!-- =========================================================
-         MAIN JAVASCRIPT
-         ========================================================= -->
+    <!-- FOOTER -->
+    <footer class="app-footer">
 
-    <script src="./script.js"></script>
+        <p>
+            👑 Math King — Real Mathematics Solver
+        </p>
 
+        <p>
+            Detailed Mathematics • Voice • Hindi + English
+        </p>
 
-    <!-- =========================================================
-         PWA SERVICE WORKER
-         ========================================================= -->
+    </footer>
 
-    <script>
-
-        (function () {
-
-            "use strict";
-
-            if ("serviceWorker" in navigator) {
-
-                window.addEventListener("load", function () {
-
-                    navigator.serviceWorker
-                        .register("./service-worker.js", {
-                            scope: "./"
-                        })
-                        .then(function (registration) {
-
-                            console.log(
-                                "Math King Service Worker registered:",
-                                registration.scope
-                            );
-
-                        })
-                        .catch(function (error) {
-
-                            console.error(
-                                "Math King Service Worker registration failed:",
-                                error
-                            );
-
-                        });
-
-                });
-
-            }
-
-        })();
-
-    </script>
+</div>
 
 
-    <!-- =========================================================
-         PWA INSTALL SYSTEM
-         Android / Chrome / Edge
-         ========================================================= -->
+<script src="script.js"></script>
 
-    <script>
+<script>
 
-        (function () {
+if ("serviceWorker" in navigator) {
 
-            "use strict";
+    window.addEventListener("load", function () {
 
-            let deferredInstallPrompt = null;
+        navigator.serviceWorker
+            .register("./service-worker.js")
+            .then(function (registration) {
 
-            const installCard =
-                document.getElementById("installCard");
-
-            const installBtn =
-                document.getElementById("installBtn");
-
-            const iosInstallHelp =
-                document.getElementById("iosInstallHelp");
-
-
-            /* ================================================
-               DETECT IOS
-               ================================================ */
-
-            const isIOS =
-                /iphone|ipad|ipod/i.test(
-                    window.navigator.userAgent
+                console.log(
+                    "Math King Service Worker:",
+                    registration.scope
                 );
 
-            const isStandalone =
-                window.matchMedia &&
-                window.matchMedia(
-                    "(display-mode: standalone)"
-                ).matches;
+            })
+            .catch(function (error) {
 
-            const isIOSStandalone =
-                window.navigator.standalone === true;
-
-
-            /* ================================================
-               IOS INSTALL HELP
-               ================================================ */
-
-            if (
-                isIOS &&
-                !isStandalone &&
-                !isIOSStandalone &&
-                iosInstallHelp
-            ) {
-
-                iosInstallHelp.hidden = false;
-
-            }
-
-
-            /* ================================================
-               ANDROID / CHROME INSTALL EVENT
-               ================================================ */
-
-            window.addEventListener(
-                "beforeinstallprompt",
-                function (event) {
-
-                    event.preventDefault();
-
-                    deferredInstallPrompt = event;
-
-                    if (installCard) {
-                        installCard.hidden = false;
-                    }
-
-                }
-            );
-
-
-            /* ================================================
-               INSTALL BUTTON
-               ================================================ */
-
-            if (installBtn) {
-
-                installBtn.addEventListener(
-                    "click",
-                    async function () {
-
-                        if (!deferredInstallPrompt) {
-                            return;
-                        }
-
-                        deferredInstallPrompt.prompt();
-
-                        const result =
-                            await deferredInstallPrompt.userChoice;
-
-                        console.log(
-                            "Math King install result:",
-                            result.outcome
-                        );
-
-                        deferredInstallPrompt = null;
-
-                        if (installCard) {
-                            installCard.hidden = true;
-                        }
-
-                    }
+                console.error(
+                    "Service Worker Error:",
+                    error
                 );
 
-            }
+            });
 
+    });
 
-            /* ================================================
-               APP INSTALLED
-               ================================================ */
+}
 
-            window.addEventListener(
-                "appinstalled",
-                function () {
-
-                    deferredInstallPrompt = null;
-
-                    if (installCard) {
-                        installCard.hidden = true;
-                    }
-
-                    console.log(
-                        "Math King installed successfully."
-                    );
-
-                }
-            );
-
-
-            /* ================================================
-               DISPLAY MODE CHANGE
-               ================================================ */
-
-            if (window.matchMedia) {
-
-                const displayMode =
-                    window.matchMedia(
-                        "(display-mode: standalone)"
-                    );
-
-                displayMode.addEventListener(
-                    "change",
-                    function () {
-
-                        if (displayMode.matches) {
-
-                            if (installCard) {
-                                installCard.hidden = true;
-                            }
-
-                            if (iosInstallHelp) {
-                                iosInstallHelp.hidden = true;
-                            }
-
-                        }
-
-                    }
-                );
-
-            }
-
-        })();
-
-    </script>
-
-
-    <!-- =========================================================
-         ONLINE / OFFLINE STATUS
-         ========================================================= -->
-
-    <script>
-
-        (function () {
-
-            "use strict";
-
-            const connectionText =
-                document.getElementById("connectionText");
-
-            function updateConnectionStatus() {
-
-                if (!connectionText) {
-                    return;
-                }
-
-                if (navigator.onLine) {
-
-                    connectionText.textContent =
-                        "Online";
-
-                } else {
-
-                    connectionText.textContent =
-                        "Offline — Math King still works";
-
-                }
-
-            }
-
-            window.addEventListener(
-                "online",
-                updateConnectionStatus
-            );
-
-            window.addEventListener(
-                "offline",
-                updateConnectionStatus
-            );
-
-            updateConnectionStatus();
-
-        })();
-
-    </script>
-
+</script>
 
 </body>
 </html>
