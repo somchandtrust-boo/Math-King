@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- =========================================================
+         MATH KING
+         Android + iPhone + Desktop PWA Ready
+         ========================================================= -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    >
+
+    <meta
+        name="description"
+        content="Math King - Real Mathematics Question Solver with detailed step-by-step solutions."
+    >
+
+    <meta
+        name="keywords"
+        content="Math King, mathematics solver, math calculator, step by step math, Hindi math solver, English math solver"
+    >
+
+    <meta name="author" content="Math King">
+
+    <!-- =========================================================
+         PWA
+         ========================================================= -->
+
+    <meta name="theme-color" content="#07111f">
+
+    <link rel="manifest" href="./manifest.json">
+
+    <!-- Android -->
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <!-- iPhone / iPad -->
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="Math King"
+    >
+
+    <!-- iPhone Home Screen Icon -->
+    <link
+        rel="apple-touch-icon"
+        href="./icons/apple-touch-icon.png"
+    >
+
+    <!-- Fallback icon -->
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="192x192"
+        href="./icons/icon-192.png"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="512x512"
+        href="./icons/icon-512.png"
+    >
+
+    <!-- =========================================================
+         IOS SAFE AREA SUPPORT
+         ========================================================= -->
+
+    <meta
+        name="format-detection"
+        content="telephone=no"
+    >
+
+    <!-- =========================================================
+         TITLE
+         ========================================================= -->
+
+    <title>Math King — Real Mathematics Solver</title>
+
+    <!-- =========================================================
+         MAIN CSS
+         ========================================================= -->
+
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
+
+</head>
+
+<body>
+
+    <!-- =========================================================
+         APP SAFE AREA
+         ========================================================= -->
+
+    <div class="app-shell">
+
+        <!-- =====================================================
+             HEADER
+             ===================================================== -->
+
+        <header class="app-header">
+
+            <div class="brand-area">
+
+                <div class="brand-icon">
+                    👑
+                </div>
+
+                <div class="brand-text">
+
+                    <h1 id="appTitle">
+                        Math Auto Solver
+                    </h1>
+
+                    <p id="appSubtitle">
+                        Real Mathematics Question Solver
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- LANGUAGE -->
+            <div class="language-switch">
+
+                <button
+                    id="englishBtn"
+                    class="language-btn active"
+                    type="button"
+                >
+                    English
+                </button>
+
+                <button
+                    id="hindiBtn"
+                    class="language-btn"
+                    type="button"
+                >
+                    हिंदी
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- =====================================================
+             MAIN
+             ===================================================== -->
+
+        <main class="main-container">
+
+
+            <!-- =================================================
+                 SOLVER CARD
+                 ================================================= -->
+
+            <section class="solver-card">
+
+                <div class="section-heading">
+
+                    <span class="section-icon">
+                        🧮
+                    </span>
+
+                    <div>
+
+                        <h2 id="questionTitle">
+                            Enter Your Math Question
+                        </h2>
+
+                        <p id="questionSubtitle">
+                            Type or speak your mathematics question
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                     QUESTION INPUT
+                     ============================================= -->
+
+                <div class="question-wrapper">
+
+                    <textarea
+                        id="question"
+                        rows="5"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        placeholder="Example: (-6) × (-4) + (-20) ÷ 4"
+                        aria-label="Math question"
+                    ></textarea>
+
+
+                    <!-- VOICE BUTTON -->
+
+                    <button
+                        id="micBtn"
+                        class="mic-button"
+                        type="button"
+                        aria-label="Voice input"
+                    >
+
+                        <span id="micIcon">
+                            🎤
+                        </span>
+
+                        <span id="micText">
+                            Voice
+                        </span>
+
+                    </button>
+
+                </div>
+
+
+                <!-- VOICE STATUS -->
+
+                <div
+                    id="voiceStatus"
+                    class="voice-status"
+                    aria-live="polite"
+                ></div>
+
+
+                <!-- =============================================
+                     STANDARD / CLASS
+                     ============================================= -->
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label
+                            for="standard"
+                            id="standardLabel"
+                        >
+                            Standard / Class
+                        </label>
+
+                        <select id="standard">
+
+                            <option value="all">
+                                All Levels
+                            </option>
+
+                            <option value="primary">
+                                Primary
+                            </option>
+
+                            <option value="middle">
+                                Middle School
+                            </option>
+
+                            <option value="secondary">
+                                Secondary
+                            </option>
+
+                            <option value="higher">
+                                Higher Secondary
+                            </option>
+
+                            <option value="college">
+                                College
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                     ACTION BUTTONS
+                     ============================================= -->
+
+                <div class="action-buttons">
+
+                    <button
+                        id="solveBtn"
+                        class="primary-btn"
+                        type="button"
+                    >
+                        🧮 Solve
+                    </button>
+
+                    <button
+                        id="clearBtn"
+                        class="secondary-btn"
+                        type="button"
+                    >
+                        🗑️ Clear
+                    </button>
+
+                </div>
+
+
+                <!-- =============================================
+                     EXAMPLES
+                     ============================================= -->
+
+                <div class="examples-section">
+
+                    <h3 id="examplesTitle">
+                        Try Examples
+                    </h3>
+
+                    <div class="example-grid">
+
+                        <button
+                            type="button"
+                            class="example-btn"
+                            data-example="(-6) × (-4) + (-20) ÷ 4"
+                        >
+                            (-6) × (-4) + (-20) ÷ 4
+                        </button>
+
+                        <button
+                            type="button"
+                            class="example-btn"
+                            data-example="25% of 800"
+                        >
+                            25% of 800
+                        </button>
+
+                        <button
+                            type="button"
+                            class="example-btn"
+                            data-example="√144"
+                        >
+                            √144
+                        </button>
+
+                        <button
+                            type="button"
+                            class="example-btn"
+                            data-example="Find HCF of 24 and 36"
+                        >
+                            HCF of 24, 36
+                        </button>
+
+                        <button
+                            type="button"
+                            class="example-btn"
+                            data-example="Find LCM of 12 and 18"
+                        >
+                            LCM of 12, 18
+                        </button>
+
+                        <button
+                            type="button"
+                            class="example-btn"
+                            data-example="Solve: 2x + 5 = 15"
+                        >
+                            2x + 5 = 15
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 RESULT
+                 ================================================= -->
+
+            <section
+                id="resultSection"
+                class="result-card"
+                hidden
+            >
+
+                <div class="result-heading">
+
+                    <span class="section-icon">
+                        ✅
+                    </span>
+
+                    <h2 id="answerTitle">
+                        Answer
+                    </h2>
+
+                </div>
+
+
+                <!-- FINAL ANSWER -->
+
+                <div class="answer-box">
+
+                    <div class="answer-label">
+                        <span id="finalAnswerLabel">
+                            Final Answer
+                        </span>
+                    </div>
+
+                    <div
+                        id="answer"
+                        class="answer-value"
+                    ></div>
+
+                </div>
+
+
+                <!-- =================================================
+                     DETAILED STEPS
+                     ================================================= -->
+
+                <div class="steps-container">
+
+                    <h3 id="stepsTitle">
+                        Detailed Solution
+                    </h3>
+
+                    <div
+                        id="steps"
+                        class="steps-content"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 HISTORY
+                 ================================================= -->
+
+            <section class="history-card">
+
+                <div class="history-header">
+
+                    <div class="history-title-area">
+
+                        <span class="section-icon">
+                            📚
+                        </span>
+
+                        <h2 id="historyTitle">
+                            History
+                        </h2>
+
+                    </div>
+
+
+                    <button
+                        id="clearHistoryBtn"
+                        class="clear-history-btn"
+                        type="button"
+                    >
+
+                        🗑️
+
+                        <span id="clearHistoryText">
+                            Clear History
+                        </span>
+
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="historyList"
+                    class="history-list"
+                ></div>
+
+            </section>
+
+
+            <!-- =================================================
+                 PWA INSTALL CARD
+                 ================================================= -->
+
+            <section
+                id="installCard"
+                class="install-card"
+                hidden
+            >
+
+                <div class="install-icon">
+                    📲
+                </div>
+
+                <div class="install-content">
+
+                    <h3 id="installTitle">
+                        Install Math King
+                    </h3>
+
+                    <p id="installDescription">
+                        Install Math King on your device for quick access.
+                    </p>
+
+                </div>
+
+                <button
+                    id="installBtn"
+                    class="install-btn"
+                    type="button"
+                >
+                    Install
+                </button>
+
+            </section>
+
+
+            <!-- =================================================
+                 IOS INSTALL HELP
+                 ================================================= -->
+
+            <section
+                id="iosInstallHelp"
+                class="ios-install-help"
+                hidden
+            >
+
+                <div class="ios-icon">
+                    🍎
+                </div>
+
+                <div>
+
+                    <h3>
+                        Install on iPhone
+                    </h3>
+
+                    <p>
+                        Open this website in Safari, tap
+                        <strong>Share</strong>, then choose
+                        <strong>Add to Home Screen</strong>.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <!-- =====================================================
+             FOOTER
+             ===================================================== -->
+
+        <footer class="app-footer">
+
+            <p id="footerText">
+                Math King • Real Mathematics Solver
+            </p>
+
+            <p class="offline-status">
+                <span id="connectionDot">●</span>
+                <span id="connectionText">
+                    Online
+                </span>
+            </p>
+
+        </footer>
+
+    </div>
+
+
+    <!-- =========================================================
+         MAIN JAVASCRIPT
+         ========================================================= -->
+
+    <script src="./script.js"></script>
+
+
+    <!-- =========================================================
+         PWA SERVICE WORKER
+         ========================================================= -->
+
+    <script>
+
+        (function () {
+
+            "use strict";
+
+            if ("serviceWorker" in navigator) {
+
+                window.addEventListener("load", function () {
+
+                    navigator.serviceWorker
+                        .register("./service-worker.js", {
+                            scope: "./"
+                        })
+                        .then(function (registration) {
+
+                            console.log(
+                                "Math King Service Worker registered:",
+                                registration.scope
+                            );
+
+                        })
+                        .catch(function (error) {
+
+                            console.error(
+                                "Math King Service Worker registration failed:",
+                                error
+                            );
+
+                        });
+
+                });
+
+            }
+
+        })();
+
+    </script>
+
+
+    <!-- =========================================================
+         PWA INSTALL SYSTEM
+         Android / Chrome / Edge
+         ========================================================= -->
+
+    <script>
+
+        (function () {
+
+            "use strict";
+
+            let deferredInstallPrompt = null;
+
+            const installCard =
+                document.getElementById("installCard");
+
+            const installBtn =
+                document.getElementById("installBtn");
+
+            const iosInstallHelp =
+                document.getElementById("iosInstallHelp");
+
+
+            /* ================================================
+               DETECT IOS
+               ================================================ */
+
+            const isIOS =
+                /iphone|ipad|ipod/i.test(
+                    window.navigator.userAgent
+                );
+
+            const isStandalone =
+                window.matchMedia &&
+                window.matchMedia(
+                    "(display-mode: standalone)"
+                ).matches;
+
+            const isIOSStandalone =
+                window.navigator.standalone === true;
+
+
+            /* ================================================
+               IOS INSTALL HELP
+               ================================================ */
+
+            if (
+                isIOS &&
+                !isStandalone &&
+                !isIOSStandalone &&
+                iosInstallHelp
+            ) {
+
+                iosInstallHelp.hidden = false;
+
+            }
+
+
+            /* ================================================
+               ANDROID / CHROME INSTALL EVENT
+               ================================================ */
+
+            window.addEventListener(
+                "beforeinstallprompt",
+                function (event) {
+
+                    event.preventDefault();
+
+                    deferredInstallPrompt = event;
+
+                    if (installCard) {
+                        installCard.hidden = false;
+                    }
+
+                }
+            );
+
+
+            /* ================================================
+               INSTALL BUTTON
+               ================================================ */
+
+            if (installBtn) {
+
+                installBtn.addEventListener(
+                    "click",
+                    async function () {
+
+                        if (!deferredInstallPrompt) {
+                            return;
+                        }
+
+                        deferredInstallPrompt.prompt();
+
+                        const result =
+                            await deferredInstallPrompt.userChoice;
+
+                        console.log(
+                            "Math King install result:",
+                            result.outcome
+                        );
+
+                        deferredInstallPrompt = null;
+
+                        if (installCard) {
+                            installCard.hidden = true;
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* ================================================
+               APP INSTALLED
+               ================================================ */
+
+            window.addEventListener(
+                "appinstalled",
+                function () {
+
+                    deferredInstallPrompt = null;
+
+                    if (installCard) {
+                        installCard.hidden = true;
+                    }
+
+                    console.log(
+                        "Math King installed successfully."
+                    );
+
+                }
+            );
+
+
+            /* ================================================
+               DISPLAY MODE CHANGE
+               ================================================ */
+
+            if (window.matchMedia) {
+
+                const displayMode =
+                    window.matchMedia(
+                        "(display-mode: standalone)"
+                    );
+
+                displayMode.addEventListener(
+                    "change",
+                    function () {
+
+                        if (displayMode.matches) {
+
+                            if (installCard) {
+                                installCard.hidden = true;
+                            }
+
+                            if (iosInstallHelp) {
+                                iosInstallHelp.hidden = true;
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+
+        })();
+
+    </script>
+
+
+    <!-- =========================================================
+         ONLINE / OFFLINE STATUS
+         ========================================================= -->
+
+    <script>
+
+        (function () {
+
+            "use strict";
+
+            const connectionText =
+                document.getElementById("connectionText");
+
+            function updateConnectionStatus() {
+
+                if (!connectionText) {
+                    return;
+                }
+
+                if (navigator.onLine) {
+
+                    connectionText.textContent =
+                        "Online";
+
+                } else {
+
+                    connectionText.textContent =
+                        "Offline — Math King still works";
+
+                }
+
+            }
+
+            window.addEventListener(
+                "online",
+                updateConnectionStatus
+            );
+
+            window.addEventListener(
+                "offline",
+                updateConnectionStatus
+            );
+
+            updateConnectionStatus();
+
+        })();
+
+    </script>
+
+
+</body>
+</html>
