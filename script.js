@@ -1,183 +1,252 @@
 "use strict";
 
 /* =========================================================
-   MATH KING
-   REAL MATHEMATICS QUESTION SOLVER
-   FINAL SCRIPT
+   MATH KING — REAL MATHEMATICS ENGINE
+   Version: Calculator Keyboard + Detailed BODMAS
    ========================================================= */
 
 
 /* =========================================================
-   GLOBAL SETTINGS
+   GLOBAL STATE
    ========================================================= */
-
-const STORAGE_KEY = "mathSolverHistory";
 
 let currentLanguage = "en";
 
+const HISTORY_KEY = "mathKingHistory";
+
 let recognition = null;
 let isListening = false;
+
+let deferredInstallPrompt = null;
 
 
 /* =========================================================
    DOM
    ========================================================= */
 
-const questionEl = document.getElementById("question");
+const question = document.getElementById("question");
 const solveBtn = document.getElementById("solveBtn");
 const clearBtn = document.getElementById("clearBtn");
+
+const resultSection = document.getElementById("resultSection");
+const answer = document.getElementById("answer");
+const steps = document.getElementById("steps");
+
+const englishBtn = document.getElementById("englishBtn");
+const hindiBtn = document.getElementById("hindiBtn");
+
 const micBtn = document.getElementById("micBtn");
 const micIcon = document.getElementById("micIcon");
 const micText = document.getElementById("micText");
 const voiceStatus = document.getElementById("voiceStatus");
 
-const resultSection = document.getElementById("resultSection");
-const answerEl = document.getElementById("answer");
-const stepsEl = document.getElementById("steps");
-
 const historyList = document.getElementById("historyList");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 
-const englishBtn = document.getElementById("englishBtn");
-const hindiBtn = document.getElementById("hindiBtn");
+const backspaceBtn = document.getElementById("backspaceBtn");
+const deleteAllBtn = document.getElementById("deleteAllBtn");
 
-const standardEl = document.getElementById("standard");
+const installBtn = document.getElementById("installBtn");
+const iosInstallHelp = document.getElementById("iosInstallHelp");
 
 
 /* =========================================================
-   LANGUAGE TEXT
+   TRANSLATIONS
    ========================================================= */
 
 const TEXT = {
 
     en: {
 
-        title: "Math Auto Solver",
-        subtitle: "Real Mathematics Question Solver",
+        subtitle:
+            "Real Mathematics Question Solver",
 
-        questionTitle: "Enter Your Math Question",
-        questionSubtitle:
-            "Type or speak your mathematics question",
+        questionTitle:
+            "Enter Mathematics Question",
+
+        questionHint:
+            "Type, speak, or use the Math Keyboard.",
+
+        questionLabel:
+            "Your Question",
 
         placeholder:
-            "Example: (-6) × (-4) + (-20) ÷ 4",
+            "Example: Evaluate (-6) × (-4) + (-20) ÷ 4",
 
-        voice: "Voice",
-        listening: "Listening...",
+        voice:
+            "Voice Input",
 
-        standard: "Standard / Class",
+        ready:
+            "Ready",
 
-        solve: "🧮 Solve",
-        clear: "🗑️ Clear",
+        listening:
+            "Listening...",
 
-        examples: "Try Examples",
-
-        answer: "Answer",
-        finalAnswer: "Final Answer",
-
-        detailed: "Detailed Solution",
-
-        history: "History",
-        clearHistory: "Clear History",
-
-        online: "Online",
-        offline:
-            "Offline — Math King still works",
-
-        enterQuestion:
-            "Please enter a mathematics question.",
-
-        cannotSolve:
-            "I could not understand this mathematics question.",
-
-        noSpeech:
-            "No speech was detected.",
-
-        micUnsupported:
+        unsupported:
             "Voice input is not supported in this browser.",
 
-        listeningStatus:
-            "Listening... Speak your mathematics question.",
+        standard:
+            "Standard / Class",
 
-        solved:
-            "Solved successfully.",
+        solve:
+            "🧮 Solve",
 
-        step: "Step",
+        clear:
+            "🗑️ Clear",
 
-        result: "Result",
+        examples:
+            "Example Questions",
 
-        confirmClear:
-            "Clear all mathematics history?",
+        answer:
+            "Answer",
 
-        deleted:
-            "History item deleted."
+        detailed:
+            "Detailed Solution",
+
+        history:
+            "History",
+
+        clearHistory:
+            "Clear History",
+
+        noHistory:
+            "No calculations yet.",
+
+        keyboard:
+            "Math Keyboard",
+
+        keyboardHint:
+            "Tap a symbol to insert",
+
+        clearKeyboard:
+            "Clear Keyboard",
+
+        install:
+            "Install App",
+
+        installTitle:
+            "Install Math King",
+
+        installDescription:
+            "Install Math King on your Android, iPhone or desktop.",
+
+        empty:
+            "Please enter a mathematics question.",
+
+        invalid:
+            "I could not understand this mathematical expression.",
+
+        divideZero:
+            "Division by zero is not allowed.",
+
+        result:
+            "Final Answer",
+
+        step:
+            "Step",
+
+        positive:
+            "negative × negative = positive",
+
+        negative:
+            "negative ÷ positive = negative"
 
     },
 
-
     hi: {
 
-        title: "Math Auto Solver",
-        subtitle: "वास्तविक गणित प्रश्न समाधान",
+        subtitle:
+            "वास्तविक गणित प्रश्न समाधान",
 
         questionTitle:
-            "अपना गणित का प्रश्न लिखें",
+            "गणित का प्रश्न लिखें",
 
-        questionSubtitle:
-            "अपना गणित प्रश्न लिखें या बोलें",
+        questionHint:
+            "लिखें, बोलें या Math Keyboard का उपयोग करें।",
+
+        questionLabel:
+            "आपका प्रश्न",
 
         placeholder:
             "उदाहरण: (-6) × (-4) + (-20) ÷ 4",
 
-        voice: "आवाज़",
-        listening: "सुन रहा हूँ...",
+        voice:
+            "आवाज़ से लिखें",
 
-        standard: "कक्षा / स्तर",
+        ready:
+            "तैयार",
 
-        solve: "🧮 हल करें",
-        clear: "🗑️ साफ करें",
+        listening:
+            "सुन रहा हूँ...",
 
-        examples: "उदाहरण आज़माएँ",
+        unsupported:
+            "इस browser में Voice Input उपलब्ध नहीं है।",
 
-        answer: "उत्तर",
-        finalAnswer: "अंतिम उत्तर",
+        standard:
+            "कक्षा / स्तर",
 
-        detailed: "विस्तृत समाधान",
+        solve:
+            "🧮 हल करें",
 
-        history: "इतिहास",
-        clearHistory: "इतिहास साफ करें",
+        clear:
+            "🗑️ साफ करें",
 
-        online: "ऑनलाइन",
-        offline:
-            "ऑफलाइन — Math King फिर भी काम करेगा",
+        examples:
+            "उदाहरण प्रश्न",
 
-        enterQuestion:
+        answer:
+            "उत्तर",
+
+        detailed:
+            "पूरा समाधान",
+
+        history:
+            "इतिहास",
+
+        clearHistory:
+            "इतिहास साफ करें",
+
+        noHistory:
+            "अभी कोई calculation नहीं है।",
+
+        keyboard:
+            "Math Keyboard",
+
+        keyboardHint:
+            "Symbol डालने के लिए दबाएँ",
+
+        clearKeyboard:
+            "Keyboard साफ करें",
+
+        install:
+            "App Install करें",
+
+        installTitle:
+            "Math King Install करें",
+
+        installDescription:
+            "Math King को Android, iPhone या Desktop पर Install करें।",
+
+        empty:
             "कृपया गणित का प्रश्न लिखें।",
 
-        cannotSolve:
-            "मैं इस गणित के प्रश्न को समझ नहीं पाया।",
+        invalid:
+            "यह गणितीय expression समझ नहीं आया।",
 
-        noSpeech:
-            "कोई आवाज़ नहीं मिली।",
+        divideZero:
+            "Zero से division नहीं किया जा सकता।",
 
-        micUnsupported:
-            "इस ब्राउज़र में Voice Input उपलब्ध नहीं है।",
+        result:
+            "अंतिम उत्तर",
 
-        listeningStatus:
-            "सुन रहा हूँ... अपना गणित का प्रश्न बोलें।",
+        step:
+            "चरण",
 
-        solved:
-            "प्रश्न सफलतापूर्वक हल किया गया।",
+        positive:
+            "ऋणात्मक × ऋणात्मक = धनात्मक",
 
-        step: "चरण",
-
-        result: "परिणाम",
-
-        confirmClear:
-            "क्या आप पूरा गणित इतिहास साफ करना चाहते हैं?",
-
-        deleted:
-            "इतिहास हटाया गया।"
+        negative:
+            "ऋणात्मक ÷ धनात्मक = ऋणात्मक"
 
     }
 
@@ -185,120 +254,188 @@ const TEXT = {
 
 
 /* =========================================================
-   LANGUAGE SWITCH
+   LANGUAGE
    ========================================================= */
 
-function setLanguage(lang) {
+function setLanguage(language) {
 
-    currentLanguage = lang === "hi" ? "hi" : "en";
+    currentLanguage = language;
 
-    const t = TEXT[currentLanguage];
+    const t = TEXT[language];
 
-    if (englishBtn) {
-        englishBtn.classList.toggle(
-            "active",
-            currentLanguage === "en"
-        );
-    }
+    englishBtn.classList.toggle(
+        "active",
+        language === "en"
+    );
 
-    if (hindiBtn) {
-        hindiBtn.classList.toggle(
-            "active",
-            currentLanguage === "hi"
-        );
-    }
+    hindiBtn.classList.toggle(
+        "active",
+        language === "hi"
+    );
 
-    setText("appTitle", t.title);
-    setText("appSubtitle", t.subtitle);
+    document.getElementById("appSubtitle").textContent =
+        t.subtitle;
 
-    setText("questionTitle", t.questionTitle);
-    setText("questionSubtitle", t.questionSubtitle);
+    document.getElementById("questionTitle").textContent =
+        t.questionTitle;
 
-    setText("micText", t.voice);
-    setText("solveBtn", t.solve);
-    setText("clearBtn", t.clear);
+    document.getElementById("questionHint").textContent =
+        t.questionHint;
 
-    setText("examplesTitle", t.examples);
+    document.getElementById("questionLabel").textContent =
+        t.questionLabel;
 
-    setText("answerTitle", t.answer);
-    setText("finalAnswerLabel", t.finalAnswer);
-    setText("stepsTitle", t.detailed);
+    question.placeholder =
+        t.placeholder;
 
-    setText("historyTitle", t.history);
-    setText("clearHistoryText", t.clearHistory);
+    micText.textContent =
+        t.voice;
 
-    setText("standardLabel", t.standard);
+    voiceStatus.textContent =
+        t.ready;
 
-    if (questionEl) {
-        questionEl.placeholder = t.placeholder;
-    }
+    document.getElementById("standardLabel").textContent =
+        t.standard;
 
-    updateConnectionStatus();
+    solveBtn.textContent =
+        t.solve;
+
+    clearBtn.textContent =
+        t.clear;
+
+    document.getElementById("examplesTitle").textContent =
+        t.examples;
+
+    document.getElementById("answerTitle").textContent =
+        t.answer;
+
+    document.getElementById("stepsTitle").textContent =
+        t.detailed;
+
+    document.getElementById("historyTitle").textContent =
+        t.history;
+
+    document.getElementById("clearHistoryText").textContent =
+        t.clearHistory;
+
+    document.querySelector(".keyboard-header strong").textContent =
+        "🧮 " + t.keyboard;
+
+    document.querySelector(".keyboard-header small").textContent =
+        t.keyboardHint;
+
+    deleteAllBtn.textContent =
+        t.clearKeyboard;
+
+    document.getElementById("installTitle").textContent =
+        t.installTitle;
+
+    document.getElementById("installDescription").textContent =
+        t.installDescription;
+
+    installBtn.textContent =
+        t.install;
+
+    renderHistory();
 }
 
 
-/* =========================================================
-   SAFE TEXT SETTER
-   ========================================================= */
+englishBtn.addEventListener(
+    "click",
+    () => setLanguage("en")
+);
 
-function setText(id, value) {
-
-    const el = document.getElementById(id);
-
-    if (el) {
-        el.textContent = value;
-    }
-
-}
+hindiBtn.addEventListener(
+    "click",
+    () => setLanguage("hi")
+);
 
 
 /* =========================================================
-   NORMALIZE QUESTION
+   SYMBOL NORMALIZATION
    ========================================================= */
 
-function normalizeQuestion(input) {
+function normalizeMath(text) {
 
-    let q = String(input || "").trim();
+    let s = String(text || "").trim();
 
-    q = q
+    s = s
         .replace(/×/g, "*")
         .replace(/÷/g, "/")
-        .replace(/−/g, "-")
-        .replace(/–/g, "-")
-        .replace(/—/g, "-")
+        .replace(/[−–—]/g, "-")
+        .replace(/＋/g, "+")
+        .replace(/％/g, "%")
+        .replace(/π/g, "PI")
+        .replace(/∞/g, "Infinity")
         .replace(/√/g, "sqrt")
-        .replace(/π/g, "pi")
-        .replace(/％/g, "%");
+        .replace(/≤/g, "<=")
+        .replace(/≥/g, ">=")
+        .replace(/≠/g, "!=");
 
-    q = q.replace(/\bmultiplied by\b/gi, "*");
-    q = q.replace(/\btimes\b/gi, "*");
-    q = q.replace(/\bdivided by\b/gi, "/");
-    q = q.replace(/\bdivide by\b/gi, "/");
+    /*
+       Superscript conversion
+    */
 
-    q = q.replace(/\bplus\b/gi, "+");
-    q = q.replace(/\bminus\b/gi, "-");
-    q = q.replace(/\bsubtract\b/gi, "-");
+    s = s
+        .replace(/²/g, "^2")
+        .replace(/³/g, "^3")
+        .replace(/ⁿ/g, "^n");
 
-    q = q.replace(/\badd\b/gi, "+");
-    q = q.replace(/\binto\b/gi, "*");
+    /*
+       Common fraction characters
+    */
 
-    q = q.replace(/\bpower of\b/gi, "^");
-    q = q.replace(/\bsquared\b/gi, "^2");
-    q = q.replace(/\bcubed\b/gi, "^3");
+    s = s
+        .replace(/½/g, "(1/2)")
+        .replace(/⅓/g, "(1/3)")
+        .replace(/¼/g, "(1/4)")
+        .replace(/¾/g, "(3/4)");
 
-    q = q.replace(/\bto the power of\b/gi, "^");
+    return s;
+}
 
-    q = q.replace(/\bwhat is\b/gi, "");
-    q = q.replace(/\bcalculate\b/gi, "");
-    q = q.replace(/\bevaluate\b/gi, "");
-    q = q.replace(/\bsolve\b/gi, "");
-    q = q.replace(/\bfind\b/gi, "");
 
-    q = q.replace(/\bwhat\s+is\b/gi, "");
+/* =========================================================
+   VOICE NORMALIZATION
+   ========================================================= */
 
-    q = replaceNumberWords(q);
+function normalizeVoiceText(text) {
 
-    return q.trim();
+    let s = String(text || "");
+
+    const replacements = [
+
+        [/times/gi, "*"],
+        [/multiplied by/gi, "*"],
+        [/multiply/gi, "*"],
+
+        [/divided by/gi, "/"],
+        [/divide by/gi, "/"],
+
+        [/plus/gi, "+"],
+        [/add/gi, "+"],
+
+        [/minus/gi, "-"],
+        [/subtract/gi, "-"],
+
+        [/equals/gi, "="],
+
+        [/percent/gi, "%"],
+        [/percentage/gi, "%"],
+
+        [/square root of/gi, "sqrt"],
+        [/square root/gi, "sqrt"],
+
+        [/power of/gi, "^"]
+    ];
+
+    replacements.forEach(([pattern, value]) => {
+
+        s = s.replace(pattern, value);
+
+    });
+
+    return s;
 }
 
 
@@ -306,266 +443,155 @@ function normalizeQuestion(input) {
    NUMBER WORDS
    ========================================================= */
 
-function replaceNumberWords(text) {
+const numberWords = {
 
-    const map = {
+    zero: 0,
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+    eleven: 11,
+    twelve: 12,
+    thirteen: 13,
+    fourteen: 14,
+    fifteen: 15,
+    sixteen: 16,
+    seventeen: 17,
+    eighteen: 18,
+    nineteen: 19,
+    twenty: 20,
+    thirty: 30,
+    forty: 40,
+    fifty: 50,
+    sixty: 60,
+    seventy: 70,
+    eighty: 80,
+    ninety: 90,
+    hundred: 100,
+    thousand: 1000
 
-        zero: "0",
-        one: "1",
-        two: "2",
-        three: "3",
-        four: "4",
-        five: "5",
-        six: "6",
-        seven: "7",
-        eight: "8",
-        nine: "9",
-        ten: "10",
+};
 
-        eleven: "11",
-        twelve: "12",
-        thirteen: "13",
-        fourteen: "14",
-        fifteen: "15",
-        sixteen: "16",
-        seventeen: "17",
-        eighteen: "18",
-        nineteen: "19",
-        twenty: "20",
 
-        thirty: "30",
-        forty: "40",
-        fifty: "50",
-        sixty: "60",
-        seventy: "70",
-        eighty: "80",
-        ninety: "90",
+function convertNumberWords(text) {
 
-        hundred: "100",
-        thousand: "1000"
-    };
+    let s = String(text || "").toLowerCase();
 
-    let result = text;
-
-    Object.keys(map)
+    Object.keys(numberWords)
         .sort((a, b) => b.length - a.length)
         .forEach(word => {
+
+            const value = numberWords[word];
 
             const regex =
-                new RegExp("\\b" + word + "\\b", "gi");
+                new RegExp(
+                    "\\b" + word + "\\b",
+                    "gi"
+                );
 
-            result = result.replace(
-                regex,
-                map[word]
-            );
-
-        });
-
-    return result;
-}
-
-
-/* =========================================================
-   HINDI NUMBER WORDS
-   ========================================================= */
-
-function replaceHindiNumbers(text) {
-
-    const map = {
-
-        "शून्य": "0",
-        "एक": "1",
-        "दो": "2",
-        "तीन": "3",
-        "चार": "4",
-        "पाँच": "5",
-        "पांच": "5",
-        "छह": "6",
-        "छः": "6",
-        "सात": "7",
-        "आठ": "8",
-        "नौ": "9",
-        "दस": "10",
-
-        "ग्यारह": "11",
-        "बारह": "12",
-        "तेरह": "13",
-        "चौदह": "14",
-        "पंद्रह": "15",
-        "सोलह": "16",
-        "सत्रह": "17",
-        "अठारह": "18",
-        "उन्नीस": "19",
-        "बीस": "20",
-
-        "तीस": "30",
-        "चालीस": "40",
-        "पचास": "50",
-        "साठ": "60",
-        "सत्तर": "70",
-        "अस्सी": "80",
-        "नब्बे": "90",
-
-        "सौ": "100",
-        "हजार": "1000",
-        "हज़ार": "1000"
-    };
-
-    let result = text;
-
-    Object.keys(map)
-        .sort((a, b) => b.length - a.length)
-        .forEach(word => {
-
-            result = result.replaceAll(
-                word,
-                map[word]
-            );
+            s = s.replace(regex, String(value));
 
         });
 
-    return result;
+    return s;
 }
 
 
 /* =========================================================
-   MATH SYMBOL NORMALIZATION
+   SAFE TOKENIZER
    ========================================================= */
 
-function prepareExpression(input) {
+function tokenize(expression) {
 
-    let q = replaceHindiNumbers(input);
-
-    q = normalizeQuestion(q);
-
-    q = q
-        .replace(/\s+/g, " ")
-        .trim();
-
-    return q;
-}
-
-
-/* =========================================================
-   FORMAT NUMBER
-   ========================================================= */
-
-function formatNumber(value) {
-
-    if (!Number.isFinite(value)) {
-        return "Undefined";
-    }
-
-    if (Math.abs(value) < 1e-12) {
-        value = 0;
-    }
-
-    if (
-        Math.abs(value - Math.round(value)) <
-        1e-12
-    ) {
-
-        return String(Math.round(value));
-
-    }
-
-    return Number(value.toFixed(12)).toString();
-}
-
-
-/* =========================================================
-   GCD
-   ========================================================= */
-
-function gcd(a, b) {
-
-    a = Math.abs(Math.trunc(a));
-    b = Math.abs(Math.trunc(b));
-
-    while (b !== 0) {
-
-        const temp = b;
-
-        b = a % b;
-        a = temp;
-
-    }
-
-    return a;
-}
-
-
-/* =========================================================
-   LCM
-   ========================================================= */
-
-function lcm(a, b) {
-
-    a = Math.abs(Math.trunc(a));
-    b = Math.abs(Math.trunc(b));
-
-    if (a === 0 || b === 0) {
-        return 0;
-    }
-
-    return Math.abs(a * b) / gcd(a, b);
-}
-
-
-/* =========================================================
-   SIGN EXPLANATION
-   ========================================================= */
-
-function explainSign(a, b, operation) {
-
-    const A = Number(a);
-    const B = Number(b);
-
-    if (
-        operation === "*" ||
-        operation === "/"
-    ) {
-
-        const sameSign =
-            (A < 0 && B < 0) ||
-            (A >= 0 && B >= 0);
-
-        if (sameSign) {
-
-            return currentLanguage === "hi"
-                ? "दोनों संख्याओं के चिन्ह समान हैं, इसलिए परिणाम धनात्मक होगा।"
-                : "Both numbers have the same sign, so the result is positive.";
-
-        }
-
-        return currentLanguage === "hi"
-            ? "दोनों संख्याओं के चिन्ह अलग हैं, इसलिए परिणाम ऋणात्मक होगा।"
-            : "The numbers have different signs, so the result is negative.";
-
-    }
-
-    return "";
-}
-
-
-/* =========================================================
-   TOKENIZER
-   ========================================================= */
-
-function tokenizeExpression(expression) {
+    const s = expression
+        .replace(/\s+/g, "");
 
     const tokens = [];
 
-    const regex =
-        /\d+(?:\.\d+)?|[()+\-*/]/g;
+    let i = 0;
 
-    let match;
+    while (i < s.length) {
 
-    while (
-        (match = regex.exec(expression)) !== null
-    ) {
+        const char = s[i];
 
-        tokens.push(match[0]);
+        if (/[0-9.]/.test(char)) {
+
+            let number = "";
+
+            while (
+                i < s.length &&
+                /[0-9.]/.test(s[i])
+            ) {
+
+                number += s[i];
+
+                i++;
+
+            }
+
+            if (
+                (number.match(/\./g) || []).length > 1
+            ) {
+
+                throw new Error("Invalid number");
+
+            }
+
+            tokens.push({
+                type: "number",
+                value: Number(number)
+            });
+
+            continue;
+        }
+
+        if ("+-*/()".includes(char)) {
+
+            tokens.push({
+                type: char,
+                value: char
+            });
+
+            i++;
+
+            continue;
+        }
+
+        if (
+            s.slice(i, i + 2) === "**"
+        ) {
+
+            tokens.push({
+                type: "^",
+                value: "^"
+            });
+
+            i += 2;
+
+            continue;
+        }
+
+        if (char === "^") {
+
+            tokens.push({
+                type: "^",
+                value: "^"
+            });
+
+            i++;
+
+            continue;
+        }
+
+        throw new Error(
+            "Unsupported symbol: " + char
+        );
 
     }
 
@@ -574,7 +600,7 @@ function tokenizeExpression(expression) {
 
 
 /* =========================================================
-   DETAILED PARSER
+   DETAILED EXPRESSION PARSER
    ========================================================= */
 
 class DetailedParser {
@@ -584,11 +610,11 @@ class DetailedParser {
         this.expression = expression;
 
         this.tokens =
-            tokenizeExpression(expression);
+            tokenize(expression);
 
         this.position = 0;
 
-        this.steps = [];
+        this.operations = [];
 
     }
 
@@ -600,22 +626,46 @@ class DetailedParser {
     }
 
 
-    consume() {
+    consume(type) {
 
-        return this.tokens[
-            this.position++
-        ];
+        const token =
+            this.current();
+
+        if (
+            !token ||
+            token.type !== type
+        ) {
+
+            throw new Error(
+                "Unexpected token"
+            );
+
+        }
+
+        this.position++;
+
+        return token;
 
     }
 
 
     parse() {
 
-        const value =
+        const result =
             this.parseAddition();
 
-        return value;
+        if (
+            this.position <
+            this.tokens.length
+        ) {
 
+            throw new Error(
+                "Unexpected expression"
+            );
+
+        }
+
+        return result;
     }
 
 
@@ -624,167 +674,234 @@ class DetailedParser {
         let left =
             this.parseMultiplication();
 
-        while (
-            this.current() === "+" ||
-            this.current() === "-"
-        ) {
+        while (true) {
 
-            const operation =
-                this.consume();
+            const token =
+                this.current();
+
+            if (
+                !token ||
+                !["+", "-"].includes(token.type)
+            ) {
+
+                break;
+
+            }
+
+            this.position++;
 
             const right =
                 this.parseMultiplication();
 
-            const oldLeft = left;
-            const oldRight = right;
+            const oldLeft =
+                left;
 
-            if (operation === "+") {
+            if (token.type === "+") {
 
-                left = left + right;
+                left =
+                    oldLeft + right;
+
+                this.operations.push({
+                    type: "add",
+                    left: oldLeft,
+                    right,
+                    result: left
+                });
 
             } else {
 
-                left = left - right;
+                left =
+                    oldLeft - right;
+
+                this.operations.push({
+                    type: "subtract",
+                    left: oldLeft,
+                    right,
+                    result: left
+                });
 
             }
-
-            this.steps.push({
-
-                type: "operation",
-
-                operation,
-
-                left: oldLeft,
-                right: oldRight,
-
-                result: left
-
-            });
 
         }
 
         return left;
-
     }
 
 
     parseMultiplication() {
 
         let left =
-            this.parseUnary();
+            this.parsePower();
 
-        while (
-            this.current() === "*" ||
-            this.current() === "/"
-        ) {
+        while (true) {
 
-            const operation =
-                this.consume();
-
-            const right =
-                this.parseUnary();
-
-            const oldLeft = left;
-            const oldRight = right;
+            const token =
+                this.current();
 
             if (
-                operation === "/" &&
-                right === 0
+                !token ||
+                !["*", "/"].includes(token.type)
             ) {
 
-                throw new Error(
-                    "Division by zero"
-                );
+                break;
 
             }
 
-            if (operation === "*") {
+            this.position++;
 
-                left = left * right;
+            const right =
+                this.parsePower();
+
+            const oldLeft =
+                left;
+
+            if (token.type === "*") {
+
+                left =
+                    oldLeft * right;
+
+                this.operations.push({
+                    type: "multiply",
+                    left: oldLeft,
+                    right,
+                    result: left
+                });
 
             } else {
 
-                left = left / right;
+                if (right === 0) {
+
+                    throw new Error(
+                        "DIVISION_ZERO"
+                    );
+
+                }
+
+                left =
+                    oldLeft / right;
+
+                this.operations.push({
+                    type: "divide",
+                    left: oldLeft,
+                    right,
+                    result: left
+                });
 
             }
 
-            this.steps.push({
+        }
 
-                type: "operation",
+        return left;
+    }
 
-                operation,
 
+    parsePower() {
+
+        let left =
+            this.parseUnary();
+
+        const token =
+            this.current();
+
+        if (
+            token &&
+            token.type === "^"
+        ) {
+
+            this.position++;
+
+            const right =
+                this.parsePower();
+
+            const oldLeft =
+                left;
+
+            left =
+                Math.pow(
+                    oldLeft,
+                    right
+                );
+
+            this.operations.push({
+                type: "power",
                 left: oldLeft,
-                right: oldRight,
-
+                right,
                 result: left
-
             });
 
         }
 
         return left;
-
     }
 
 
     parseUnary() {
 
-        if (this.current() === "+") {
+        const token =
+            this.current();
 
-            this.consume();
+        if (
+            token &&
+            token.type === "+"
+        ) {
+
+            this.position++;
 
             return this.parseUnary();
 
         }
 
-        if (this.current() === "-") {
+        if (
+            token &&
+            token.type === "-"
+        ) {
 
-            this.consume();
+            this.position++;
 
-            return -this.parseUnary();
+            const value =
+                this.parseUnary();
 
+            return -value;
         }
 
         return this.parsePrimary();
-
     }
 
 
     parsePrimary() {
 
-        const token = this.current();
+        const token =
+            this.current();
 
-        if (token === "(") {
+        if (!token) {
 
-            this.consume();
-
-            const value =
-                this.parseAddition();
-
-            if (this.current() !== ")") {
-
-                throw new Error(
-                    "Missing closing bracket"
-                );
-
-            }
-
-            this.consume();
-
-            return value;
+            throw new Error(
+                "Missing number"
+            );
 
         }
 
         if (
-            token &&
-            /^\d+(?:\.\d+)?$/.test(token)
+            token.type === "number"
         ) {
 
-            this.consume();
+            this.position++;
 
-            return Number(token);
+            return token.value;
+        }
 
+        if (
+            token.type === "("
+        ) {
+
+            this.position++;
+
+            const value =
+                this.parseAddition();
+
+            this.consume(")");
+
+            return value;
         }
 
         throw new Error(
@@ -797,281 +914,162 @@ class DetailedParser {
 
 
 /* =========================================================
-   BUILD DETAILED STEP TEXT
+   FORMAT NUMBER
    ========================================================= */
 
-function buildOperationExplanation(step, index) {
+function formatNumber(value) {
 
-    const left =
-        formatNumber(step.left);
+    if (!Number.isFinite(value)) {
 
-    const right =
-        formatNumber(step.right);
-
-    const result =
-        formatNumber(step.result);
-
-    let expression =
-        `${left} ${step.operation} ${right}`;
-
-    let explanation = "";
-
-    if (
-        step.operation === "*" ||
-        step.operation === "/"
-    ) {
-
-        explanation =
-            explainSign(
-                step.left,
-                step.right,
-                step.operation
-            );
+        return String(value);
 
     }
 
-    return {
+    if (
+        Math.abs(value) < 1e-12
+    ) {
 
-        expression,
-        result,
-        explanation,
-        index
+        value = 0;
 
-    };
+    }
+
+    if (
+        Number.isInteger(value)
+    ) {
+
+        return String(value);
+
+    }
+
+    return Number(
+        value.toFixed(12)
+    ).toString();
 
 }
 
 
 /* =========================================================
-   DETAILED EXPRESSION SOLVER
+   SIGN EXPLANATION
+   ========================================================= */
+
+function signExplanation(
+    left,
+    right,
+    operation
+) {
+
+    const lNeg = left < 0;
+    const rNeg = right < 0;
+
+    if (
+        operation === "*" ||
+        operation === "/"
+    ) {
+
+        if (
+            lNeg &&
+            rNeg
+        ) {
+
+            return currentLanguage === "hi"
+                ? "दोनों संख्याएँ ऋणात्मक हैं, इसलिए ऋणात्मक × ऋणात्मक / ऋणात्मक ÷ ऋणात्मक का परिणाम धनात्मक होगा।"
+                : "Both numbers are negative, so negative × negative / negative ÷ negative gives a positive result.";
+
+        }
+
+        if (
+            lNeg !== rNeg
+        ) {
+
+            return currentLanguage === "hi"
+                ? "एक संख्या ऋणात्मक और दूसरी धनात्मक है, इसलिए परिणाम ऋणात्मक होगा।"
+                : "One number is negative and the other is positive, so the result is negative.";
+
+        }
+
+    }
+
+    return "";
+
+}
+
+
+/* =========================================================
+   DETAILED BODMAS SOLVER
    ========================================================= */
 
 function solveDetailedExpression(expression) {
 
-    const clean =
-        expression
-            .replace(/\^/g, "")
-            .trim();
-
     const parser =
-        new DetailedParser(clean);
+        new DetailedParser(expression);
 
-    const value =
+    const result =
         parser.parse();
 
-    if (
-        parser.position !==
-        parser.tokens.length
-    ) {
-
-        throw new Error(
-            "Invalid expression"
-        );
-
-    }
-
     return {
-
-        answer: value,
-        steps: parser.steps
-
+        result,
+        operations:
+            parser.operations
     };
 
 }
 
 
 /* =========================================================
-   BODMAS SOLVER
+   SOLVER HELPERS
    ========================================================= */
 
-function solveBODMASExpression(expression) {
+function extractNumbers(text) {
 
-    let clean =
-        expression
-            .replace(/=/g, "")
-            .trim();
+    return (text.match(
+        /-?\d+(?:\.\d+)?/g
+    ) || []).map(Number);
 
-    /* Power */
-    if (
-        /^[-+]?\d+(?:\.\d+)?\s*\^\s*[-+]?\d+(?:\.\d+)?$/
-        .test(clean)
-    ) {
+}
 
-        const parts =
-            clean.split("^");
 
-        const base =
-            Number(parts[0]);
+function gcd(a, b) {
 
-        const exponent =
-            Number(parts[1]);
+    a = Math.abs(a);
+    b = Math.abs(b);
 
-        const answer =
-            Math.pow(base, exponent);
+    while (b !== 0) {
 
-        return {
+        const temp = b;
 
-            answer,
+        b = a % b;
 
-            steps: [
-
-                {
-                    type: "power",
-                    base,
-                    exponent,
-                    result: answer
-                }
-
-            ]
-
-        };
+        a = temp;
 
     }
 
+    return a;
+}
 
-    const solved =
-        solveDetailedExpression(clean);
 
-    return solved;
+function lcm(a, b) {
+
+    if (a === 0 || b === 0) {
+        return 0;
+    }
+
+    return Math.abs(
+        a * b
+    ) / gcd(a, b);
 
 }
 
 
 /* =========================================================
-   FRACTION SOLVER
+   SPECIAL SOLVERS
    ========================================================= */
 
-function solveFraction(question) {
-
-    const q =
-        question
-            .replace(/\s+/g, "")
-            .replace(/÷/g, "/");
+function solvePercentage(text) {
 
     const match =
-        q.match(
-            /(-?\d+)\s*\/\s*(-?\d+)\s*([+\-*\/])\s*(-?\d+)\s*\/\s*(-?\d+)/
+        text.match(
+            /(-?\d+(?:\.\d+)?)\s*%\s*(?:of|का|की)?\s*(-?\d+(?:\.\d+)?)/i
         );
-
-    if (!match) {
-        return null;
-    }
-
-    const a = Number(match[1]);
-    const b = Number(match[2]);
-    const op = match[3];
-    const c = Number(match[4]);
-    const d = Number(match[5]);
-
-    if (b === 0 || d === 0) {
-        throw new Error(
-            "Fraction denominator cannot be zero."
-        );
-    }
-
-    let numerator;
-    let denominator;
-
-    if (op === "+") {
-
-        numerator =
-            a * d + c * b;
-
-        denominator =
-            b * d;
-
-    } else if (op === "-") {
-
-        numerator =
-            a * d - c * b;
-
-        denominator =
-            b * d;
-
-    } else if (op === "*") {
-
-        numerator =
-            a * c;
-
-        denominator =
-            b * d;
-
-    } else {
-
-        if (c === 0) {
-            throw new Error(
-                "Cannot divide by zero."
-            );
-        }
-
-        numerator =
-            a * d;
-
-        denominator =
-            b * c;
-
-    }
-
-    const divisor =
-        gcd(numerator, denominator);
-
-    numerator /= divisor;
-    denominator /= divisor;
-
-    return {
-
-        answer:
-            `${numerator}/${denominator}`,
-
-        numericAnswer:
-            numerator / denominator,
-
-        steps: [
-
-            {
-                type: "fraction",
-
-                a,
-                b,
-                c,
-                d,
-                op,
-
-                numerator,
-                denominator
-
-            }
-
-        ]
-
-    };
-
-}
-
-
-/* =========================================================
-   PERCENTAGE
-   ========================================================= */
-
-function solvePercentage(question) {
-
-    let q = question
-        .replace(/,/g, "")
-        .trim();
-
-    let match =
-        q.match(
-            /(-?\d+(?:\.\d+)?)\s*%\s*(?:of|का)\s*(-?\d+(?:\.\d+)?)/i
-        );
-
-    if (!match) {
-
-        match =
-            q.match(
-                /(-?\d+(?:\.\d+)?)\s*%\s*(-?\d+(?:\.\d+)?)/i
-            );
-
-    }
 
     if (!match) {
         return null;
@@ -1083,21 +1081,22 @@ function solvePercentage(question) {
     const number =
         Number(match[2]);
 
-    const answer =
-        percent * number / 100;
+    const result =
+        percent / 100 * number;
 
     return {
 
-        answer,
+        result,
 
         steps: [
 
-            {
-                type: "percentage",
-                percent,
-                number,
-                result: answer
-            }
+            currentLanguage === "hi"
+                ? `${percent}% को decimal में बदलें: ${percent} ÷ 100 = ${percent / 100}`
+                : `Convert ${percent}% to decimal: ${percent} ÷ 100 = ${percent / 100}`,
+
+            currentLanguage === "hi"
+                ? `${percent / 100} × ${number} = ${formatNumber(result)}`
+                : `${percent / 100} × ${number} = ${formatNumber(result)}`
 
         ]
 
@@ -1106,14 +1105,10 @@ function solvePercentage(question) {
 }
 
 
-/* =========================================================
-   AVERAGE
-   ========================================================= */
-
-function solveAverage(question) {
+function solveAverage(text) {
 
     if (
-        !/average|mean|औसत/i.test(question)
+        !/average|औसत/i.test(text)
     ) {
 
         return null;
@@ -1121,44 +1116,38 @@ function solveAverage(question) {
     }
 
     const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
-        );
+        extractNumbers(text);
 
-    if (
-        !numbers ||
-        numbers.length < 2
-    ) {
-
+    if (numbers.length < 1) {
         return null;
-
     }
 
-    const values =
-        numbers.map(Number);
-
     const sum =
-        values.reduce(
+        numbers.reduce(
             (a, b) => a + b,
             0
         );
 
-    const answer =
-        sum / values.length;
+    const result =
+        sum / numbers.length;
 
     return {
 
-        answer,
+        result,
 
         steps: [
 
-            {
-                type: "average",
-                values,
-                sum,
-                count: values.length,
-                result: answer
-            }
+            currentLanguage === "hi"
+                ? `सभी संख्याओं का योग: ${numbers.join(" + ")} = ${sum}`
+                : `Add all numbers: ${numbers.join(" + ")} = ${sum}`,
+
+            currentLanguage === "hi"
+                ? `कुल ${numbers.length} संख्याएँ हैं।`
+                : `There are ${numbers.length} numbers.`,
+
+            currentLanguage === "hi"
+                ? `औसत = ${sum} ÷ ${numbers.length} = ${formatNumber(result)}`
+                : `Average = ${sum} ÷ ${numbers.length} = ${formatNumber(result)}`
 
         ]
 
@@ -1167,15 +1156,10 @@ function solveAverage(question) {
 }
 
 
-/* =========================================================
-   HCF
-   ========================================================= */
-
-function solveHCF(question) {
+function solveHCF(text) {
 
     if (
-        !/hcf|gcd|greatest common factor|महत्तम समापवर्तक/i
-            .test(question)
+        !/hcf|gcd|महत्तम|म.स.ा/i.test(text)
     ) {
 
         return null;
@@ -1183,61 +1167,51 @@ function solveHCF(question) {
     }
 
     const numbers =
-        question.match(/\d+/g);
+        extractNumbers(text);
 
-    if (
-        !numbers ||
-        numbers.length < 2
-    ) {
-
+    if (numbers.length < 2) {
         return null;
-
     }
 
-    const values =
-        numbers.map(Number);
+    let result =
+        Math.abs(numbers[0]);
 
-    let answer = values[0];
+    const stepList = [];
 
     for (
         let i = 1;
-        i < values.length;
+        i < numbers.length;
         i++
     ) {
 
-        answer =
-            gcd(answer, values[i]);
+        const old = result;
+
+        result =
+            gcd(
+                result,
+                numbers[i]
+            );
+
+        stepList.push(
+            currentLanguage === "hi"
+                ? `HCF(${old}, ${numbers[i]}) = ${result}`
+                : `HCF(${old}, ${numbers[i]}) = ${result}`
+        );
 
     }
 
     return {
-
-        answer,
-
-        steps: [
-
-            {
-                type: "hcf",
-                values,
-                result: answer
-            }
-
-        ]
-
+        result,
+        steps: stepList
     };
 
 }
 
 
-/* =========================================================
-   LCM
-   ========================================================= */
-
-function solveLCM(question) {
+function solveLCM(text) {
 
     if (
-        !/lcm|least common multiple|लघुत्तम समापवर्त्य/i
-            .test(question)
+        !/lcm|लघुत्तम|ल.स.ा/i.test(text)
     ) {
 
         return null;
@@ -1245,92 +1219,88 @@ function solveLCM(question) {
     }
 
     const numbers =
-        question.match(/\d+/g);
+        extractNumbers(text);
 
-    if (
-        !numbers ||
-        numbers.length < 2
-    ) {
-
+    if (numbers.length < 2) {
         return null;
-
     }
 
-    const values =
-        numbers.map(Number);
+    let result =
+        Math.abs(numbers[0]);
 
-    let answer = values[0];
+    const stepList = [];
 
     for (
         let i = 1;
-        i < values.length;
+        i < numbers.length;
         i++
     ) {
 
-        answer =
-            lcm(answer, values[i]);
+        const old = result;
+
+        result =
+            lcm(
+                result,
+                numbers[i]
+            );
+
+        stepList.push(
+            `LCM(${old}, ${numbers[i]}) = ${result}`
+        );
 
     }
 
     return {
-
-        answer,
-
-        steps: [
-
-            {
-                type: "lcm",
-                values,
-                result: answer
-            }
-
-        ]
-
+        result,
+        steps: stepList
     };
 
 }
 
 
-/* =========================================================
-   SQUARE ROOT
-   ========================================================= */
+function solveSquareRoot(text) {
 
-function solveSquareRoot(question) {
-
-    let match =
-        question.match(
-            /(?:sqrt|square root|वर्गमूल)\s*\(?\s*(-?\d+(?:\.\d+)?)\s*\)?/i
+    const match =
+        text.match(
+            /(?:sqrt|√)\s*(?:of\s*)?\(?\s*(-?\d+(?:\.\d+)?)\s*\)?/i
         );
 
     if (!match) {
         return null;
     }
 
-    const number =
+    const n =
         Number(match[1]);
 
-    if (number < 0) {
+    if (n < 0) {
 
-        throw new Error(
-            "Square root of a negative number is not a real number."
-        );
+        return {
+            error:
+                currentLanguage === "hi"
+                    ? "Negative number का real square root नहीं है।"
+                    : "A negative number does not have a real square root."
+        };
 
     }
 
-    const answer =
-        Math.sqrt(number);
+    const result =
+        Math.sqrt(n);
 
     return {
 
-        answer,
+        result,
 
         steps: [
 
-            {
-                type: "sqrt",
-                number,
-                result: answer
-            }
+            currentLanguage === "hi"
+                ? `√${n} का अर्थ ऐसी संख्या ढूँढना है जिसका square ${n} हो।`
+                : `√${n} means finding the number whose square is ${n}.`,
+
+            `${formatNumber(result)} × ${formatNumber(result)} = ${n}`,
+
+            currentLanguage === "hi"
+                ? `अंतिम उत्तर = ${formatNumber(result)}`
+                : `Final Answer = ${formatNumber(result)}`
 
         ]
 
@@ -1339,15 +1309,11 @@ function solveSquareRoot(question) {
 }
 
 
-/* =========================================================
-   POWER
-   ========================================================= */
-
-function solvePower(question) {
+function solvePower(text) {
 
     const match =
-        question.match(
-            /(-?\d+(?:\.\d+)?)\s*\^\s*(-?\d+(?:\.\d+)?)/i
+        text.match(
+            /^\s*(?:calculate|evaluate|solve)?\s*\(?\s*(-?\d+(?:\.\d+)?)\s*\)?\s*(?:\^|power\s+of)\s*\(?\s*(-?\d+(?:\.\d+)?)\s*\)?\s*$/i
         );
 
     if (!match) {
@@ -1360,21 +1326,25 @@ function solvePower(question) {
     const exponent =
         Number(match[2]);
 
-    const answer =
-        Math.pow(base, exponent);
+    const result =
+        Math.pow(
+            base,
+            exponent
+        );
 
     return {
 
-        answer,
+        result,
 
         steps: [
 
-            {
-                type: "power",
-                base,
-                exponent,
-                result: answer
-            }
+            `${base} ^ ${exponent}`,
+
+            currentLanguage === "hi"
+                ? `${base} को ${exponent} बार power में उपयोग करें।`
+                : `Raise ${base} to the power ${exponent}.`,
+
+            `= ${formatNumber(result)}`
 
         ]
 
@@ -1385,27 +1355,94 @@ function solvePower(question) {
 
 /* =========================================================
    LINEAR EQUATION
-   ax + b = c
    ========================================================= */
 
-function solveLinearEquation(question) {
+function solveLinearEquation(text) {
 
-    if (!/[xX]/.test(question)) {
-        return null;
-    }
-
-    if (!question.includes("=")) {
-        return null;
-    }
-
-    const clean =
-        question
-            .replace(/\s+/g, "")
-            .replace(/[?]/g, "");
+    let s =
+        normalizeMath(text)
+            .replace(/solve/gi, "")
+            .replace(/x/gi, "x")
+            .replace(/\s+/g, "");
 
     const match =
-        clean.match(
-            /^([+-]?\d*\.?\d*)x([+-]\d+(?:\.\d+)?)?=([+-]?\d+(?:\.\d+)?)$/
+        s.match(
+            /^([+-]?\d*\.?\d*)x([+-]\d*\.?\d*)=([+-]?\d*\.?\d*)$/
+        );
+
+    if (!match) {
+        return null;
+    }
+
+    let a =
+        match[1];
+
+    if (
+        a === "" ||
+        a === "+"
+    ) {
+        a = 1;
+    }
+
+    if (a === "-") {
+        a = -1;
+    }
+
+    a = Number(a);
+
+    const b =
+        Number(
+            match[2] || 0
+        );
+
+    const c =
+        Number(match[3]);
+
+    if (a === 0) {
+        return null;
+    }
+
+    const result =
+        (c - b) / a;
+
+    return {
+
+        result,
+
+        steps: [
+
+            `${a}x ${b >= 0 ? "+" : "-"} ${Math.abs(b)} = ${c}`,
+
+            currentLanguage === "hi"
+                ? `${b} को दूसरी side ले जाने पर: ${a}x = ${c - b}`
+                : `Move ${b} to the other side: ${a}x = ${c - b}`,
+
+            currentLanguage === "hi"
+                ? `दोनों sides को ${a} से divide करें।`
+                : `Divide both sides by ${a}.`,
+
+            `x = ${formatNumber(result)}`
+
+        ]
+
+    };
+
+}
+
+
+/* =========================================================
+   QUADRATIC
+   ========================================================= */
+
+function solveQuadratic(text) {
+
+    const s =
+        normalizeMath(text)
+            .replace(/\s+/g, "");
+
+    const match =
+        s.match(
+            /^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d*)=0$/
         );
 
     if (!match) {
@@ -1417,141 +1454,40 @@ function solveLinearEquation(question) {
 
     if (a === "" || a === "+") {
         a = 1;
-    } else if (a === "-") {
-        a = -1;
-    } else {
-        a = Number(a);
     }
+
+    if (a === "-") {
+        a = -1;
+    }
+
+    a = Number(a);
 
     const b =
-        match[2]
-            ? Number(match[2])
-            : 0;
+        Number(match[2] || 0);
 
     const c =
-        Number(match[3]);
-
-    if (a === 0) {
-        return null;
-    }
-
-    const answer =
-        (c - b) / a;
-
-    return {
-
-        answer,
-
-        steps: [
-
-            {
-                type: "linear",
-                a,
-                b,
-                c,
-                result: answer
-            }
-
-        ]
-
-    };
-
-}
-
-
-/* =========================================================
-   QUADRATIC EQUATION
-   ax² + bx + c = 0
-   ========================================================= */
-
-function solveQuadraticEquation(question) {
-
-    const clean =
-        question
-            .replace(/\s+/g, "")
-            .replace(/[?]/g, "")
-            .replace(/²/g, "^2");
-
-    if (
-        !clean.includes("x") ||
-        !clean.includes("=")
-    ) {
-
-        return null;
-
-    }
-
-    const match =
-        clean.match(
-            /^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d*)=0$/
-        );
-
-    if (!match) {
-        return null;
-    }
-
-    let a = match[1];
-
-    if (a === "" || a === "+") {
-        a = 1;
-    } else if (a === "-") {
-        a = -1;
-    } else {
-        a = Number(a);
-    }
-
-    let b = match[2];
-
-    if (b === "" || b === "+") {
-        b = 1;
-    } else if (b === "-") {
-        b = -1;
-    } else {
-        b = Number(b);
-    }
-
-    let c = match[3];
-
-    if (c === "" || c === "+") {
-        c = 0;
-    } else {
-        c = Number(c);
-    }
+        Number(match[3] || 0);
 
     const discriminant =
         b * b - 4 * a * c;
 
-    if (discriminant >= 0) {
-
-        const root =
-            Math.sqrt(discriminant);
-
-        const x1 =
-            (-b + root) / (2 * a);
-
-        const x2 =
-            (-b - root) / (2 * a);
+    if (discriminant < 0) {
 
         return {
 
-            answer:
-                `x₁ = ${formatNumber(x1)}, x₂ = ${formatNumber(x2)}`,
+            result: "No real roots",
 
             steps: [
 
-                {
-                    type: "quadratic",
+                `D = b² − 4ac`,
 
-                    a,
-                    b,
-                    c,
+                `D = ${b}² − 4(${a})(${c})`,
 
-                    discriminant,
+                `D = ${discriminant}`,
 
-                    x1,
-                    x2
-
-                }
+                currentLanguage === "hi"
+                    ? "Discriminant negative है, इसलिए real roots नहीं हैं।"
+                    : "The discriminant is negative, so there are no real roots."
 
             ]
 
@@ -1559,35 +1495,30 @@ function solveQuadraticEquation(question) {
 
     }
 
+    const root1 =
+        (-b + Math.sqrt(discriminant))
+        / (2 * a);
 
-    const realPart =
-        -b / (2 * a);
-
-    const imaginaryPart =
-        Math.sqrt(-discriminant) /
-        Math.abs(2 * a);
+    const root2 =
+        (-b - Math.sqrt(discriminant))
+        / (2 * a);
 
     return {
 
-        answer:
-            `x₁ = ${formatNumber(realPart)} + ${formatNumber(imaginaryPart)}i, ` +
-            `x₂ = ${formatNumber(realPart)} - ${formatNumber(imaginaryPart)}i`,
+        result:
+            `x₁ = ${formatNumber(root1)}, x₂ = ${formatNumber(root2)}`,
 
         steps: [
 
-            {
-                type: "quadraticComplex",
+            `D = b² − 4ac`,
 
-                a,
-                b,
-                c,
+            `D = ${b}² − 4(${a})(${c}) = ${discriminant}`,
 
-                discriminant,
+            `x = (−b ± √D) / 2a`,
 
-                realPart,
-                imaginaryPart
+            `x₁ = ${formatNumber(root1)}`,
 
-            }
+            `x₂ = ${formatNumber(root2)}`
 
         ]
 
@@ -1597,552 +1528,203 @@ function solveQuadraticEquation(question) {
 
 
 /* =========================================================
-   PROFIT / LOSS
+   GENERAL QUESTION
    ========================================================= */
 
-function solveProfitLoss(question) {
+function solveBODMAS(text) {
 
-    if (
-        !/profit|loss|लाभ|हानि/i.test(question)
-    ) {
+    let expression =
+        normalizeMath(text);
 
-        return null;
+    expression =
+        expression
+            .replace(
+                /^(evaluate|calculate|solve|find|what is)\s*:?\s*/i,
+                ""
+            )
+            .trim();
 
-    }
+    /*
+       Remove trailing equals
+    */
 
-    const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
+    expression =
+        expression.replace(/=$/, "");
+
+    /*
+       Handle absolute value
+    */
+
+    expression =
+        expression.replace(
+            /\|(-?\d+(?:\.\d+)?)\|/g,
+            "($1<0 ? -($1) : ($1))"
         );
 
-    if (
-        !numbers ||
-        numbers.length < 2
-    ) {
+    /*
+       PI
+    */
 
-        return null;
-
-    }
-
-    const values =
-        numbers.map(Number);
-
-    const cost =
-        values[0];
-
-    const selling =
-        values[1];
-
-    if (cost === 0) {
-        return null;
-    }
-
-    const difference =
-        selling - cost;
-
-    const percentage =
-        Math.abs(difference) /
-        cost *
-        100;
-
-    return {
-
-        answer:
-            difference >= 0
-                ? `Profit = ${formatNumber(difference)}, Profit% = ${formatNumber(percentage)}%`
-                : `Loss = ${formatNumber(Math.abs(difference))}, Loss% = ${formatNumber(percentage)}%`,
-
-        steps: [
-
-            {
-                type: "profitLoss",
-
-                cost,
-                selling,
-                difference,
-                percentage
-
-            }
-
-        ]
-
-    };
-
-}
-
-
-/* =========================================================
-   SIMPLE INTEREST
-   ========================================================= */
-
-function solveSimpleInterest(question) {
-
-    if (
-        !/simple interest|si|साधारण ब्याज/i.test(question)
-    ) {
-
-        return null;
-
-    }
-
-    const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
+    expression =
+        expression.replace(
+            /\bPI\b/g,
+            String(Math.PI)
         );
 
-    if (
-        !numbers ||
-        numbers.length < 3
-    ) {
+    /*
+       Percentage as decimal when used after a number.
+    */
 
-        return null;
-
-    }
-
-    const P = Number(numbers[0]);
-    const R = Number(numbers[1]);
-    const T = Number(numbers[2]);
-
-    const interest =
-        P * R * T / 100;
-
-    const amount =
-        P + interest;
-
-    return {
-
-        answer:
-            `SI = ${formatNumber(interest)}, Amount = ${formatNumber(amount)}`,
-
-        steps: [
-
-            {
-                type: "simpleInterest",
-                P,
-                R,
-                T,
-                interest,
-                amount
-            }
-
-        ]
-
-    };
-
-}
-
-
-/* =========================================================
-   COMPOUND INTEREST
-   ========================================================= */
-
-function solveCompoundInterest(question) {
-
-    if (
-        !/compound interest|ci|चक्रवृद्धि ब्याज/i.test(question)
-    ) {
-
-        return null;
-
-    }
-
-    const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
+    expression =
+        expression.replace(
+            /(\d+(?:\.\d+)?)%/g,
+            "($1/100)"
         );
 
+    /*
+       Remove unsupported words around pure expressions.
+    */
+
+    expression =
+        expression.replace(
+            /\b(what|is|the|answer|of|equals?)\b/gi,
+            ""
+        )
+        .trim();
+
+    /*
+       If normal expression is not possible,
+       return null.
+    */
+
     if (
-        !numbers ||
-        numbers.length < 3
+        !/^[0-9+\-*/().^ \t]+$/.test(expression)
     ) {
 
         return null;
 
     }
 
-    const P = Number(numbers[0]);
-    const R = Number(numbers[1]);
-    const T = Number(numbers[2]);
+    try {
 
-    const amount =
-        P * Math.pow(
-            1 + R / 100,
-            T
-        );
-
-    const interest =
-        amount - P;
-
-    return {
-
-        answer:
-            `CI = ${formatNumber(interest)}, Amount = ${formatNumber(amount)}`,
-
-        steps: [
-
-            {
-                type: "compoundInterest",
-                P,
-                R,
-                T,
-                interest,
-                amount
-            }
-
-        ]
-
-    };
-
-}
-
-
-/* =========================================================
-   SPEED / DISTANCE / TIME
-   ========================================================= */
-
-function solveSpeedDistanceTime(question) {
-
-    if (
-        !/speed|distance|time|गति|दूरी|समय/i.test(question)
-    ) {
-
-        return null;
-
-    }
-
-    const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
-        );
-
-    if (
-        !numbers ||
-        numbers.length < 2
-    ) {
-
-        return null;
-
-    }
-
-    const values =
-        numbers.map(Number);
-
-    if (/speed|गति/i.test(question)) {
-
-        const distance = values[0];
-        const time = values[1];
-
-        if (time === 0) {
-            return null;
-        }
-
-        const speed =
-            distance / time;
+        const detailed =
+            solveDetailedExpression(
+                expression
+            );
 
         return {
 
-            answer:
-                `Speed = ${formatNumber(speed)}`,
+            result:
+                detailed.result,
 
-            steps: [
+            operations:
+                detailed.operations,
 
-                {
-                    type: "speed",
-                    distance,
-                    time,
-                    result: speed
-                }
-
-            ]
+            expression
 
         };
 
-    }
-
-    if (/distance|दूरी/i.test(question)) {
-
-        const speed = values[0];
-        const time = values[1];
-
-        const distance =
-            speed * time;
-
-        return {
-
-            answer:
-                `Distance = ${formatNumber(distance)}`,
-
-            steps: [
-
-                {
-                    type: "distance",
-                    speed,
-                    time,
-                    result: distance
-                }
-
-            ]
-
-        };
-
-    }
-
-    return null;
-
-}
-
-
-/* =========================================================
-   GEOMETRY
-   ========================================================= */
-
-function solveGeometry(question) {
-
-    if (
-        !/area|perimeter|circle|rectangle|square|त्रिज्या|क्षेत्रफल|परिमाप/i
-            .test(question)
-    ) {
-
-        return null;
-
-    }
-
-    const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
-        );
-
-    if (!numbers || numbers.length === 0) {
-        return null;
-    }
-
-    const values =
-        numbers.map(Number);
-
-
-    /* Square */
-    if (/square|वर्ग/i.test(question)) {
-
-        const side = values[0];
-
-        const area =
-            side * side;
-
-        const perimeter =
-            4 * side;
-
-        return {
-
-            answer:
-                `Area = ${formatNumber(area)}, Perimeter = ${formatNumber(perimeter)}`,
-
-            steps: [
-
-                {
-                    type: "square",
-                    side,
-                    area,
-                    perimeter
-                }
-
-            ]
-
-        };
-
-    }
-
-
-    /* Rectangle */
-    if (/rectangle|आयत/i.test(question)) {
-
-        if (values.length < 2) {
-            return null;
-        }
-
-        const length = values[0];
-        const width = values[1];
-
-        const area =
-            length * width;
-
-        const perimeter =
-            2 * (length + width);
-
-        return {
-
-            answer:
-                `Area = ${formatNumber(area)}, Perimeter = ${formatNumber(perimeter)}`,
-
-            steps: [
-
-                {
-                    type: "rectangle",
-                    length,
-                    width,
-                    area,
-                    perimeter
-                }
-
-            ]
-
-        };
-
-    }
-
-
-    /* Circle */
-    if (/circle|वृत्त/i.test(question)) {
-
-        const radius = values[0];
-
-        const area =
-            Math.PI * radius * radius;
-
-        const circumference =
-            2 * Math.PI * radius;
-
-        return {
-
-            answer:
-                `Area = ${formatNumber(area)}, Circumference = ${formatNumber(circumference)}`,
-
-            steps: [
-
-                {
-                    type: "circle",
-                    radius,
-                    area,
-                    circumference
-                }
-
-            ]
-
-        };
-
-    }
-
-    return null;
-
-}
-
-
-/* =========================================================
-   STATISTICS
-   ========================================================= */
-
-function solveStatistics(question) {
-
-    if (
-        !/median|mode|statistics|माध्यिका|बहुलक|सांख्यिकी/i
-            .test(question)
-    ) {
-
-        return null;
-
-    }
-
-    const numbers =
-        question.match(
-            /-?\d+(?:\.\d+)?/g
-        );
-
-    if (
-        !numbers ||
-        numbers.length === 0
-    ) {
-
-        return null;
-
-    }
-
-    const values =
-        numbers.map(Number).sort(
-            (a, b) => a - b
-        );
-
-
-    /* Median */
-
-    let median;
-
-    const middle =
-        Math.floor(values.length / 2);
-
-    if (values.length % 2 === 0) {
-
-        median =
-            (
-                values[middle - 1] +
-                values[middle]
-            ) / 2;
-
-    } else {
-
-        median =
-            values[middle];
-
-    }
-
-
-    /* Mode */
-
-    const counts = {};
-
-    values.forEach(value => {
-
-        counts[value] =
-            (counts[value] || 0) + 1;
-
-    });
-
-    let maxCount = 0;
-    let modes = [];
-
-    Object.keys(counts).forEach(key => {
-
-        const count =
-            counts[key];
-
-        if (count > maxCount) {
-
-            maxCount = count;
-            modes = [Number(key)];
-
-        } else if (
-            count === maxCount &&
-            count > 1
+    } catch (error) {
+
+        if (
+            error.message ===
+            "DIVISION_ZERO"
         ) {
 
-            modes.push(Number(key));
+            return {
+                error: "DIVISION_ZERO"
+            };
 
         }
 
-    });
+        return null;
+
+    }
+
+}
 
 
-    return {
+/* =========================================================
+   DETAIL TEXT
+   ========================================================= */
 
-        answer:
-            `Median = ${formatNumber(median)}` +
-            (
-                modes.length
-                    ? `, Mode = ${modes.map(formatNumber).join(", ")}`
-                    : ""
-            ),
+function operationText(operation) {
 
-        steps: [
+    const {
+        type,
+        left,
+        right,
+        result
+    } = operation;
 
-            {
-                type: "statistics",
-                values,
-                median,
-                modes,
-                maxCount
-            }
+    const l =
+        formatNumber(left);
 
-        ]
+    const r =
+        formatNumber(right);
 
-    };
+    const res =
+        formatNumber(result);
+
+    if (type === "multiply") {
+
+        let text =
+            `${l} × ${r} = ${res}`;
+
+        const sign =
+            signExplanation(
+                left,
+                right,
+                "*"
+            );
+
+        if (sign) {
+            text += ` — ${sign}`;
+        }
+
+        return text;
+
+    }
+
+    if (type === "divide") {
+
+        let text =
+            `${l} ÷ ${r} = ${res}`;
+
+        const sign =
+            signExplanation(
+                left,
+                right,
+                "/"
+            );
+
+        if (sign) {
+            text += ` — ${sign}`;
+        }
+
+        return text;
+
+    }
+
+    if (type === "add") {
+
+        return `${l} + ${r} = ${res}`;
+
+    }
+
+    if (type === "subtract") {
+
+        return `${l} − ${r} = ${res}`;
+
+    }
+
+    if (type === "power") {
+
+        return `${l} ^ ${r} = ${res}`;
+
+    }
+
+    return `${res}`;
 
 }
 
@@ -2151,941 +1733,233 @@ function solveStatistics(question) {
    MAIN SOLVER
    ========================================================= */
 
-function solveQuestion(question) {
+function solveQuestion(rawQuestion) {
 
-    const original =
-        String(question || "").trim();
+    let text =
+        String(rawQuestion || "")
+            .trim();
 
-    if (!original) {
+    if (!text) {
 
-        throw new Error(
-            TEXT[currentLanguage].enterQuestion
+        return {
+            error: "EMPTY"
+        };
+
+    }
+
+    text =
+        convertNumberWords(
+            normalizeVoiceText(text)
+        );
+
+    /*
+       Special solvers
+    */
+
+    let result;
+
+    result =
+        solveQuadratic(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solveLinearEquation(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solvePercentage(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solveSquareRoot(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solvePower(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solveAverage(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solveHCF(text);
+
+    if (result) {
+        return result;
+    }
+
+    result =
+        solveLCM(text);
+
+    if (result) {
+        return result;
+    }
+
+    /*
+       General BODMAS
+    */
+
+    result =
+        solveBODMAS(text);
+
+    if (result) {
+
+        if (
+            result.error ===
+            "DIVISION_ZERO"
+        ) {
+
+            return result;
+
+        }
+
+        return result;
+
+    }
+
+    return {
+        error: "INVALID"
+    };
+
+}
+
+
+/* =========================================================
+   RENDER RESULT
+   ========================================================= */
+
+function renderResult(data) {
+
+    resultSection.hidden = false;
+
+    if (data.error) {
+
+        answer.textContent =
+            data.error === "EMPTY"
+                ? TEXT[currentLanguage].empty
+                : data.error === "DIVISION_ZERO"
+                    ? TEXT[currentLanguage].divideZero
+                    : data.error;
+
+        steps.innerHTML = "";
+
+        return;
+
+    }
+
+    answer.textContent =
+        typeof data.result === "number"
+            ? formatNumber(data.result)
+            : data.result;
+
+    const stepList = [];
+
+
+    /*
+       Special solver steps
+    */
+
+    if (Array.isArray(data.steps)) {
+
+        data.steps.forEach(item => {
+
+            stepList.push(item);
+
+        });
+
+    }
+
+
+    /*
+       BODMAS operations
+    */
+
+    if (
+        Array.isArray(data.operations)
+    ) {
+
+        if (stepList.length === 0) {
+
+            stepList.push(
+                currentLanguage === "hi"
+                    ? "BODMAS के अनुसार पहले × और ÷ को हल किया जाता है, फिर + और − को।"
+                    : "According to BODMAS, multiplication and division are solved before addition and subtraction."
+            );
+
+        }
+
+        data.operations.forEach(operation => {
+
+            stepList.push(
+                operationText(operation)
+            );
+
+        });
+
+
+        stepList.push(
+            currentLanguage === "hi"
+                ? `अंतिम उत्तर = ${formatNumber(data.result)}`
+                : `Final Answer = ${formatNumber(data.result)}`
         );
 
     }
 
-    let q =
-        prepareExpression(original);
 
+    if (stepList.length === 0) {
 
-    /* Quadratic first */
-    let result =
-        solveQuadraticEquation(q);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Linear */
-    result =
-        solveLinearEquation(q);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Percentage */
-    result =
-        solvePercentage(q);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Fraction */
-    result =
-        solveFraction(q);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Square root */
-    result =
-        solveSquareRoot(q);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Power */
-    result =
-        solvePower(q);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Average */
-    result =
-        solveAverage(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* HCF */
-    result =
-        solveHCF(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* LCM */
-    result =
-        solveLCM(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Profit / Loss */
-    result =
-        solveProfitLoss(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Simple Interest */
-    result =
-        solveSimpleInterest(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Compound Interest */
-    result =
-        solveCompoundInterest(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Speed / Distance */
-    result =
-        solveSpeedDistanceTime(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Geometry */
-    result =
-        solveGeometry(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* Statistics */
-    result =
-        solveStatistics(original);
-
-    if (result) {
-        return result;
-    }
-
-
-    /* BODMAS */
-    if (
-        /[\d()+\-*/]/.test(q)
-    ) {
-
-        result =
-            solveBODMASExpression(q);
-
-        if (result) {
-            return result;
-        }
+        stepList.push(
+            currentLanguage === "hi"
+                ? `अंतिम उत्तर = ${data.result}`
+                : `Final Answer = ${data.result}`
+        );
 
     }
 
 
-    throw new Error(
-        TEXT[currentLanguage].cannotSolve
-    );
-
-}
-
-
-/* =========================================================
-   RENDER STEPS
-   ========================================================= */
-
-function renderSteps(result) {
-
-    if (!stepsEl) {
-        return;
-    }
-
-    stepsEl.innerHTML = "";
-
-    let counter = 1;
-
-
-    result.steps.forEach(step => {
-
-        const item =
-            document.createElement("div");
-
-        item.className = "solution-step";
-
-
-        /* ---------------------------------------------
-           Normal operation
-           --------------------------------------------- */
-
-        if (step.type === "operation") {
-
-            const data =
-                buildOperationExplanation(
-                    step,
-                    counter
-                );
-
-            let explanation =
-                data.explanation;
-
-            let operationText =
-                `${data.expression} = ${data.result}`;
-
-            if (
-                currentLanguage === "hi"
-            ) {
-
-                explanation =
-                    explanation ||
-                    `गणना करने पर परिणाम ${data.result} आता है।`;
-
-            } else {
-
-                explanation =
-                    explanation ||
-                    `Calculating this operation gives ${data.result}.`;
-
-            }
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    ${escapeHTML(operationText)}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Power
-           --------------------------------------------- */
-
-        else if (step.type === "power") {
-
-            const base =
-                formatNumber(step.base);
-
-            const exponent =
-                formatNumber(step.exponent);
-
-            const answer =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `${base} को ${exponent} की घात पर उठाने पर ${answer} मिलता है।`
-                    : `Raise ${base} to the power ${exponent} to get ${answer}.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    ${escapeHTML(
-                        `${base} ^ ${exponent} = ${answer}`
-                    )}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Percentage
-           --------------------------------------------- */
-
-        else if (step.type === "percentage") {
-
-            const answer =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `${step.percent}% का अर्थ ${step.percent}/100 है। इसलिए ${step.percent}/100 × ${step.number} = ${answer}.`
-                    : `${step.percent}% means ${step.percent}/100. Therefore ${step.percent}/100 × ${step.number} = ${answer}.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    ${escapeHTML(
-                        `${step.percent}/100 × ${step.number} = ${answer}`
-                    )}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Fraction
-           --------------------------------------------- */
-
-        else if (step.type === "fraction") {
-
-            const sign =
-                step.op;
-
-            const fraction =
-                `${step.a}/${step.b} ${sign} ${step.c}/${step.d}`;
-
-            const resultFraction =
-                `${step.numerator}/${step.denominator}`;
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `भिन्नों को समान denominator में बदलकर सरल किया गया।`
-                    : `The fractions are combined using a common denominator and simplified.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    ${escapeHTML(
-                        `${fraction} = ${resultFraction}`
-                    )}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Square root
-           --------------------------------------------- */
-
-        else if (step.type === "sqrt") {
-
-            const answer =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `वह संख्या खोजते हैं जिसका square ${step.number} है।`
-                    : `Find the number whose square is ${step.number}.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    √${escapeHTML(
-                        String(step.number)
-                    )} = ${answer}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Average
-           --------------------------------------------- */
-
-        else if (step.type === "average") {
-
-            const values =
-                step.values.join(" + ");
-
-            const answer =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `पहले सभी संख्याओं का योग करें, फिर कुल संख्याओं से भाग दें।`
-                    : `Add all values and divide the sum by the number of values.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    (${escapeHTML(values)}) ÷ ${step.count}
-                    = ${answer}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           HCF
-           --------------------------------------------- */
-
-        else if (step.type === "hcf") {
-
-            const answer =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `दिए गए सभी numbers का सबसे बड़ा common factor निकाला गया।`
-                    : `Find the greatest common factor shared by all the numbers.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    HCF(${escapeHTML(
-                        step.values.join(", ")
-                    )}) = ${answer}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           LCM
-           --------------------------------------------- */
-
-        else if (step.type === "lcm") {
-
-            const answer =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `वह सबसे छोटी positive संख्या निकाली गई जो सभी दी गई संख्याओं से पूरी तरह divide होती है।`
-                    : `Find the smallest positive number divisible by all the given numbers.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    LCM(${escapeHTML(
-                        step.values.join(", ")
-                    )}) = ${answer}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Linear equation
-           --------------------------------------------- */
-
-        else if (step.type === "linear") {
-
-            const x =
-                formatNumber(step.result);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `पहले constant को दूसरी तरफ ले जाएँ, फिर x के coefficient से divide करें।`
-                    : `Move the constant to the other side, then divide by the coefficient of x.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    x = ${x}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Quadratic
-           --------------------------------------------- */
-
-        else if (step.type === "quadratic") {
-
-            const D =
-                formatNumber(step.discriminant);
-
-            const x1 =
-                formatNumber(step.x1);
-
-            const x2 =
-                formatNumber(step.x2);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `Quadratic formula x = (-b ± √(b² − 4ac)) / 2a का उपयोग किया गया।`
-                    : `Use the quadratic formula x = (-b ± √(b² − 4ac)) / 2a.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Discriminant = ${D}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                    <br>
-                    x₁ = ${x1},
-                    x₂ = ${x2}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Complex quadratic
-           --------------------------------------------- */
-
-        else if (
-            step.type === "quadraticComplex"
-        ) {
-
-            const D =
-                formatNumber(step.discriminant);
-
-            const real =
-                formatNumber(step.realPart);
-
-            const imaginary =
-                formatNumber(step.imaginaryPart);
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `Discriminant negative है, इसलिए roots complex हैं।`
-                    : `The discriminant is negative, so the roots are complex.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Discriminant = ${D}
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                    <br>
-                    x₁ = ${real} + ${imaginary}i
-                    <br>
-                    x₂ = ${real} - ${imaginary}i
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Profit Loss
-           --------------------------------------------- */
-
-        else if (step.type === "profitLoss") {
-
-            const difference =
-                formatNumber(
-                    Math.abs(step.difference)
-                );
-
-            const percentage =
-                formatNumber(step.percentage);
-
-            const type =
-                step.difference >= 0
-                    ? "Profit"
-                    : "Loss";
-
-            const explanation =
-                currentLanguage === "hi"
-                    ? `Selling Price और Cost Price का अंतर ${difference} है। Percentage = Difference ÷ Cost Price × 100.`
-                    : `Difference = Selling Price − Cost Price. Percentage = Difference ÷ Cost Price × 100.`;
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    ${type} = ${difference}
-                    <br>
-                    Percentage = ${percentage}%
-                </div>
-
-                <div class="step-explanation">
-                    ${escapeHTML(explanation)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Simple Interest
-           --------------------------------------------- */
-
-        else if (
-            step.type === "simpleInterest"
-        ) {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    SI = P × R × T ÷ 100
-                    <br>
-                    SI = ${formatNumber(step.interest)}
-                    <br>
-                    Amount = ${formatNumber(step.amount)}
-                </div>
-
-                <div class="step-explanation">
-                    ${currentLanguage === "hi"
-                        ? "साधारण ब्याज का formula SI = P × R × T / 100 है।"
-                        : "Simple Interest formula is SI = P × R × T / 100."
-                    }
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Compound Interest
-           --------------------------------------------- */
-
-        else if (
-            step.type === "compoundInterest"
-        ) {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    A = P(1 + R/100)^T
-                    <br>
-                    Amount = ${formatNumber(step.amount)}
-                    <br>
-                    CI = ${formatNumber(step.interest)}
-                </div>
-
-                <div class="step-explanation">
-                    ${currentLanguage === "hi"
-                        ? "चक्रवृद्धि ब्याज का formula A = P(1 + R/100)^T है।"
-                        : "Compound amount formula is A = P(1 + R/100)^T."
-                    }
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Speed
-           --------------------------------------------- */
-
-        else if (step.type === "speed") {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Speed = Distance ÷ Time
-                    <br>
-                    = ${formatNumber(step.result)}
-                </div>
-
-                <div class="step-explanation">
-                    ${currentLanguage === "hi"
-                        ? "गति = दूरी ÷ समय।"
-                        : "Speed = Distance ÷ Time."
-                    }
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Distance
-           --------------------------------------------- */
-
-        else if (step.type === "distance") {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Distance = Speed × Time
-                    <br>
-                    = ${formatNumber(step.result)}
-                </div>
-
-                <div class="step-explanation">
-                    ${currentLanguage === "hi"
-                        ? "दूरी = गति × समय।"
-                        : "Distance = Speed × Time."
-                    }
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Geometry
-           --------------------------------------------- */
-
-        else if (step.type === "square") {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Area = side² = ${formatNumber(step.area)}
-                    <br>
-                    Perimeter = 4 × side = ${formatNumber(step.perimeter)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        else if (step.type === "rectangle") {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Area = Length × Width
-                    <br>
-                    = ${formatNumber(step.area)}
-                    <br><br>
-                    Perimeter = 2(Length + Width)
-                    <br>
-                    = ${formatNumber(step.perimeter)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        else if (step.type === "circle") {
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Area = πr²
-                    <br>
-                    = ${formatNumber(step.area)}
-                    <br><br>
-                    Circumference = 2πr
-                    <br>
-                    = ${formatNumber(step.circumference)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-
-        /* ---------------------------------------------
-           Statistics
-           --------------------------------------------- */
-
-        else if (step.type === "statistics") {
-
-            const modes =
-                step.modes.length
-                    ? step.modes.map(formatNumber).join(", ")
-                    : "No mode";
-
-            item.innerHTML = `
-                <div class="step-number">
-                    ${TEXT[currentLanguage].step} ${counter}
-                </div>
-
-                <div class="step-equation">
-                    Sorted Data:
-                    ${escapeHTML(
-                        step.values.join(", ")
-                    )}
-                    <br><br>
-                    Median = ${formatNumber(step.median)}
-                    <br>
-                    Mode = ${escapeHTML(modes)}
-                </div>
-            `;
-
-            counter++;
-
-        }
-
-        stepsEl.appendChild(item);
-
+    steps.innerHTML =
+        stepList
+            .map(
+                (item, index) => `
+                    <div class="step-item">
+                        <span class="step-number">
+                            ${TEXT[currentLanguage].step} ${index + 1}:
+                        </span>
+                        ${escapeHTML(item)}
+                    </div>
+                `
+            )
+            .join("");
+
+    resultSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
     });
 
-
-    /* ---------------------------------------------
-       Final result
-       --------------------------------------------- */
-
-    const finalItem =
-        document.createElement("div");
-
-    finalItem.className =
-        "final-step";
-
-    finalItem.innerHTML = `
-        <strong>
-            ${TEXT[currentLanguage].result}
-        </strong>
-        <br>
-        ${escapeHTML(
-            String(result.answer)
-        )}
-    `;
-
-    stepsEl.appendChild(finalItem);
-
 }
 
 
 /* =========================================================
-   ESCAPE HTML
+   HTML ESCAPE
    ========================================================= */
 
 function escapeHTML(value) {
@@ -3104,152 +1978,244 @@ function escapeHTML(value) {
    SOLVE BUTTON
    ========================================================= */
 
-function solveCurrentQuestion() {
+function performSolve() {
 
-    const question =
-        questionEl
-            ? questionEl.value.trim()
-            : "";
-
-    if (!question) {
-
-        showError(
-            TEXT[currentLanguage].enterQuestion
+    const data =
+        solveQuestion(
+            question.value
         );
 
-        return;
-
-    }
-
-
-    try {
-
-        const result =
-            solveQuestion(question);
-
-        showResult(result);
-
-        saveHistory(
-            question,
-            result.answer
-        );
-
-        if (voiceStatus) {
-
-            voiceStatus.textContent =
-                TEXT[currentLanguage].solved;
-
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
-        showError(
-            error.message ||
-            TEXT[currentLanguage].cannotSolve
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SHOW RESULT
-   ========================================================= */
-
-function showResult(result) {
-
-    if (!resultSection) {
-        return;
-    }
-
-    resultSection.hidden = false;
-
-    let answer =
-        result.answer;
+    renderResult(data);
 
     if (
-        typeof answer === "number"
+        !data.error
     ) {
 
-        answer =
-            formatNumber(answer);
-
-    }
-
-    if (answerEl) {
-
-        answerEl.textContent =
-            answer;
-
-    }
-
-    renderSteps(result);
-
-    resultSection.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-
-}
-
-
-/* =========================================================
-   SHOW ERROR
-   ========================================================= */
-
-function showError(message) {
-
-    if (resultSection) {
-
-        resultSection.hidden = false;
-
-    }
-
-    if (answerEl) {
-
-        answerEl.textContent =
-            "⚠️ " + message;
-
-    }
-
-    if (stepsEl) {
-
-        stepsEl.innerHTML = "";
+        saveHistory(
+            question.value,
+            data.result
+        );
 
     }
 
 }
 
 
+solveBtn.addEventListener(
+    "click",
+    performSolve
+);
+
+
 /* =========================================================
-   CLEAR CURRENT QUESTION
+   CLEAR
    ========================================================= */
 
-function clearQuestion() {
+clearBtn.addEventListener(
+    "click",
+    function () {
 
-    if (questionEl) {
-
-        questionEl.value = "";
-        questionEl.focus();
-
-    }
-
-    if (resultSection) {
+        question.value = "";
 
         resultSection.hidden = true;
 
+        answer.textContent = "";
+
+        steps.innerHTML = "";
+
+        question.focus();
+
     }
+);
 
-    if (voiceStatus) {
 
-        voiceStatus.textContent = "";
+/* =========================================================
+   MATH KEYBOARD INSERT
+   ========================================================= */
 
-    }
+document
+    .querySelectorAll(".math-key")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                insertAtCursor(
+                    question,
+                    this.dataset.symbol || ""
+                );
+
+            }
+        );
+
+    });
+
+
+function insertAtCursor(
+    textarea,
+    text
+) {
+
+    const start =
+        textarea.selectionStart ?? textarea.value.length;
+
+    const end =
+        textarea.selectionEnd ?? textarea.value.length;
+
+    const before =
+        textarea.value.substring(
+            0,
+            start
+        );
+
+    const after =
+        textarea.value.substring(
+            end
+        );
+
+    textarea.value =
+        before +
+        text +
+        after;
+
+    const position =
+        start + text.length;
+
+    textarea.focus();
+
+    textarea.setSelectionRange(
+        position,
+        position
+    );
 
 }
+
+
+/* =========================================================
+   BACKSPACE
+   ========================================================= */
+
+backspaceBtn.addEventListener(
+    "click",
+    function () {
+
+        const start =
+            question.selectionStart;
+
+        const end =
+            question.selectionEnd;
+
+        if (
+            start !== end
+        ) {
+
+            question.value =
+                question.value.substring(
+                    0,
+                    start
+                ) +
+                question.value.substring(
+                    end
+                );
+
+            question.setSelectionRange(
+                start,
+                start
+            );
+
+            question.focus();
+
+            return;
+
+        }
+
+        if (start > 0) {
+
+            question.value =
+                question.value.substring(
+                    0,
+                    start - 1
+                ) +
+                question.value.substring(
+                    start
+                );
+
+            question.setSelectionRange(
+                start - 1,
+                start - 1
+            );
+
+        }
+
+        question.focus();
+
+    }
+);
+
+
+/* =========================================================
+   CLEAR KEYBOARD
+   ========================================================= */
+
+deleteAllBtn.addEventListener(
+    "click",
+    function () {
+
+        question.value = "";
+
+        question.focus();
+
+    }
+);
+
+
+/* =========================================================
+   KEYBOARD SHORTCUT
+   ========================================================= */
+
+question.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            performSolve();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   EXAMPLES
+   ========================================================= */
+
+document
+    .querySelectorAll(".example-btn")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                question.value =
+                    this.dataset.example || "";
+
+                question.focus();
+
+                performSolve();
+
+            }
+        );
+
+    });
 
 
 /* =========================================================
@@ -3260,28 +2226,13 @@ function getHistory() {
 
     try {
 
-        const data =
+        return JSON.parse(
             localStorage.getItem(
-                STORAGE_KEY
-            );
-
-        if (!data) {
-            return [];
-        }
-
-        const parsed =
-            JSON.parse(data);
-
-        return Array.isArray(parsed)
-            ? parsed
-            : [];
-
-    } catch (error) {
-
-        console.error(
-            "History read error:",
-            error
+                HISTORY_KEY
+            ) || "[]"
         );
+
+    } catch {
 
         return [];
 
@@ -3290,87 +2241,60 @@ function getHistory() {
 }
 
 
-/* =========================================================
-   SAVE HISTORY
-   ========================================================= */
-
 function saveHistory(
-    question,
-    answer
+    questionText,
+    result
 ) {
-
-    try {
-
-        let history =
-            getHistory();
-
-        history.unshift({
-
-            id:
-                Date.now() +
-                Math.random()
-                    .toString(36)
-                    .slice(2),
-
-            question,
-            answer:
-                typeof answer === "number"
-                    ? formatNumber(answer)
-                    : answer,
-
-            time:
-                new Date().toLocaleString()
-
-        });
-
-
-        history =
-            history.slice(0, 50);
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(history)
-        );
-
-        renderHistory();
-
-    } catch (error) {
-
-        console.error(
-            "History save error:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   RENDER HISTORY
-   ========================================================= */
-
-function renderHistory() {
-
-    if (!historyList) {
-        return;
-    }
 
     const history =
         getHistory();
 
-    historyList.innerHTML = "";
+    history.unshift({
+
+        id:
+            Date.now(),
+
+        question:
+            questionText,
+
+        answer:
+            result,
+
+        time:
+            new Date().toLocaleString()
+
+    });
+
+    /*
+       Maximum 50 records
+    */
+
+    localStorage.setItem(
+        HISTORY_KEY,
+        JSON.stringify(
+            history.slice(0, 50)
+        )
+    );
+
+    renderHistory();
+
+}
 
 
-    if (history.length === 0) {
+function renderHistory() {
+
+    const history =
+        getHistory();
+
+    if (
+        history.length === 0
+    ) {
 
         historyList.innerHTML = `
-            <div class="empty-history">
-                ${
-                    currentLanguage === "hi"
-                        ? "अभी कोई history नहीं है।"
-                        : "No mathematics history yet."
-                }
+            <div class="history-empty">
+                ${escapeHTML(
+                    TEXT[currentLanguage].noHistory
+                )}
             </div>
         `;
 
@@ -3378,106 +2302,105 @@ function renderHistory() {
 
     }
 
+    historyList.innerHTML =
+        history
+            .map(item => {
 
-    history.forEach(item => {
+                return `
+                    <div class="history-item">
 
-        const card =
-            document.createElement("div");
+                        <div
+                            class="history-question"
+                            data-history-id="${item.id}"
+                        >
 
-        card.className =
-            "history-item";
+                            <div>
+                                ${escapeHTML(item.question)}
+                            </div>
 
+                            <div class="history-answer">
+                                = ${escapeHTML(item.answer)}
+                            </div>
 
-        const content =
-            document.createElement("div");
+                        </div>
 
-        content.className =
-            "history-content";
+                        <button
+                            type="button"
+                            class="history-delete"
+                            data-delete-id="${item.id}"
+                            aria-label="Delete"
+                        >
+                            🗑️
+                        </button>
 
-        content.innerHTML = `
-            <div class="history-question">
-                ${escapeHTML(item.question)}
-            </div>
+                    </div>
+                `;
 
-            <div class="history-answer">
-                = ${escapeHTML(
-                    String(item.answer)
-                )}
-            </div>
-
-            <div class="history-time">
-                ${escapeHTML(
-                    item.time || ""
-                )}
-            </div>
-        `;
-
-
-        const deleteBtn =
-            document.createElement("button");
-
-        deleteBtn.className =
-            "history-delete";
-
-        deleteBtn.type =
-            "button";
-
-        deleteBtn.textContent =
-            "×";
-
-        deleteBtn.setAttribute(
-            "aria-label",
-            "Delete history item"
-        );
-
-
-        deleteBtn.addEventListener(
-            "click",
-            function (event) {
-
-                event.stopPropagation();
-
-                deleteHistoryItem(
-                    item.id
-                );
-
-            }
-        );
-
-
-        card.appendChild(content);
-        card.appendChild(deleteBtn);
-
-
-        card.addEventListener(
-            "click",
-            function () {
-
-                if (questionEl) {
-
-                    questionEl.value =
-                        item.question;
-
-                }
-
-                solveCurrentQuestion();
-
-            }
-        );
-
-
-        historyList.appendChild(card);
-
-    });
+            })
+            .join("");
 
 }
 
 
-/* =========================================================
-   DELETE HISTORY ITEM
-   ========================================================= */
+historyList.addEventListener(
+    "click",
+    function (event) {
 
-function deleteHistoryItem(id) {
+        const deleteButton =
+            event.target.closest(
+                ".history-delete"
+            );
+
+        if (deleteButton) {
+
+            const id =
+                Number(
+                    deleteButton.dataset.deleteId
+                );
+
+            deleteHistory(id);
+
+            return;
+
+        }
+
+
+        const item =
+            event.target.closest(
+                ".history-question"
+            );
+
+        if (item) {
+
+            const id =
+                Number(
+                    item.dataset.historyId
+                );
+
+            const history =
+                getHistory();
+
+            const record =
+                history.find(
+                    x => x.id === id
+                );
+
+            if (record) {
+
+                question.value =
+                    record.question;
+
+                performSolve();
+
+            }
+
+        }
+
+    }
+);
+
+
+function deleteHistory(id) {
 
     const history =
         getHistory()
@@ -3486,7 +2409,7 @@ function deleteHistoryItem(id) {
             );
 
     localStorage.setItem(
-        STORAGE_KEY,
+        HISTORY_KEY,
         JSON.stringify(history)
     );
 
@@ -3495,70 +2418,49 @@ function deleteHistoryItem(id) {
 }
 
 
-/* =========================================================
-   CLEAR ALL HISTORY
-   ========================================================= */
+clearHistoryBtn.addEventListener(
+    "click",
+    function () {
 
-function clearHistory() {
+        if (
+            !confirm(
+                currentLanguage === "hi"
+                    ? "क्या आप पूरा History साफ करना चाहते हैं?"
+                    : "Clear all calculation history?"
+            )
+        ) {
 
-    const confirmed =
-        window.confirm(
-            TEXT[currentLanguage].confirmClear
+            return;
+
+        }
+
+        localStorage.removeItem(
+            HISTORY_KEY
         );
 
-    if (!confirmed) {
-        return;
+        renderHistory();
+
     }
-
-    localStorage.removeItem(
-        STORAGE_KEY
-    );
-
-    renderHistory();
-
-}
+);
 
 
 /* =========================================================
    VOICE RECOGNITION
    ========================================================= */
 
-function setupVoiceRecognition() {
-
-    const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
 
-    if (!SpeechRecognition) {
-
-        if (micBtn) {
-
-            micBtn.addEventListener(
-                "click",
-                function () {
-
-                    showError(
-                        TEXT[currentLanguage]
-                            .micUnsupported
-                    );
-
-                }
-            );
-
-        }
-
-        return;
-
-    }
-
+if (SpeechRecognition) {
 
     recognition =
         new SpeechRecognition();
 
     recognition.continuous = false;
 
-    recognition.interimResults = true;
+    recognition.interimResults = false;
 
     recognition.maxAlternatives = 1;
 
@@ -3568,36 +2470,15 @@ function setupVoiceRecognition() {
 
             isListening = true;
 
-            if (micBtn) {
+            micBtn.classList.add(
+                "listening"
+            );
 
-                micBtn.classList.add(
-                    "listening"
-                );
+            micIcon.textContent =
+                "🔴";
 
-            }
-
-            if (micIcon) {
-
-                micIcon.textContent =
-                    "🔴";
-
-            }
-
-            if (micText) {
-
-                micText.textContent =
-                    TEXT[currentLanguage]
-                        .listening;
-
-            }
-
-            if (voiceStatus) {
-
-                voiceStatus.textContent =
-                    TEXT[currentLanguage]
-                        .listeningStatus;
-
-            }
+            voiceStatus.textContent =
+                TEXT[currentLanguage].listening;
 
         };
 
@@ -3605,55 +2486,25 @@ function setupVoiceRecognition() {
     recognition.onresult =
         function (event) {
 
-            let finalText = "";
-            let interimText = "";
+            const transcript =
+                event.results[0][0].transcript;
 
-            for (
-                let i = event.resultIndex;
-                i < event.results.length;
-                i++
-            ) {
-
-                const transcript =
-                    event.results[i][0]
-                        .transcript;
-
-                if (
-                    event.results[i].isFinal
-                ) {
-
-                    finalText += transcript;
-
-                } else {
-
-                    interimText += transcript;
-
-                }
-
-            }
-
-
-            if (questionEl) {
-
-                questionEl.value =
-                    finalText ||
-                    interimText;
-
-            }
-
-
-            if (finalText.trim()) {
-
-                setTimeout(
-                    function () {
-
-                        solveCurrentQuestion();
-
-                    },
-                    250
+            question.value =
+                normalizeVoiceText(
+                    transcript
                 );
 
-            }
+            voiceStatus.textContent =
+                transcript;
+
+            /*
+               Voice के बाद automatic solve
+            */
+
+            setTimeout(
+                performSolve,
+                250
+            );
 
         };
 
@@ -3662,21 +2513,12 @@ function setupVoiceRecognition() {
         function (event) {
 
             console.error(
-                "Speech recognition error:",
+                "Voice error:",
                 event.error
             );
 
-            isListening = false;
-
-            resetMic();
-
-            if (voiceStatus) {
-
-                voiceStatus.textContent =
-                    "Voice error: " +
-                    event.error;
-
-            }
+            voiceStatus.textContent =
+                event.error;
 
         };
 
@@ -3686,296 +2528,138 @@ function setupVoiceRecognition() {
 
             isListening = false;
 
-            resetMic();
+            micBtn.classList.remove(
+                "listening"
+            );
+
+            micIcon.textContent =
+                "🎤";
+
+            if (
+                voiceStatus.textContent ===
+                TEXT[currentLanguage].listening
+            ) {
+
+                voiceStatus.textContent =
+                    TEXT[currentLanguage].ready;
+
+            }
 
         };
 
-}
+} else {
 
+    micBtn.disabled = true;
 
-/* =========================================================
-   START / STOP VOICE
-   ========================================================= */
-
-function toggleVoice() {
-
-    if (!recognition) {
-
-        showError(
-            TEXT[currentLanguage]
-                .micUnsupported
-        );
-
-        return;
-
-    }
-
-
-    if (isListening) {
-
-        recognition.stop();
-
-        return;
-
-    }
-
-
-    recognition.lang =
-        currentLanguage === "hi"
-            ? "hi-IN"
-            : "en-IN";
-
-
-    try {
-
-        recognition.start();
-
-    } catch (error) {
-
-        console.error(error);
-
-    }
+    voiceStatus.textContent =
+        TEXT[currentLanguage].unsupported;
 
 }
 
 
-/* =========================================================
-   RESET MIC
-   ========================================================= */
+micBtn.addEventListener(
+    "click",
+    function () {
 
-function resetMic() {
+        if (!recognition) {
+            return;
+        }
 
-    if (micBtn) {
+        if (isListening) {
 
-        micBtn.classList.remove(
-            "listening"
-        );
+            recognition.stop();
 
-    }
-
-    if (micIcon) {
-
-        micIcon.textContent =
-            "🎤";
-
-    }
-
-    if (micText) {
-
-        micText.textContent =
-            TEXT[currentLanguage].voice;
-
-    }
-
-}
-
-
-/* =========================================================
-   EXAMPLES
-   ========================================================= */
-
-function setupExamples() {
-
-    const buttons =
-        document.querySelectorAll(
-            "[data-example]"
-        );
-
-    buttons.forEach(button => {
-
-        button.addEventListener(
-            "click",
-            function () {
-
-                const example =
-                    button.getAttribute(
-                        "data-example"
-                    );
-
-                if (questionEl) {
-
-                    questionEl.value =
-                        example;
-
-                }
-
-                solveCurrentQuestion();
-
-            }
-        );
-
-    });
-
-}
-
-
-/* =========================================================
-   KEYBOARD SHORTCUT
-   ========================================================= */
-
-function setupKeyboard() {
-
-    if (!questionEl) {
-        return;
-    }
-
-    questionEl.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                (event.ctrlKey ||
-                 event.metaKey) &&
-                event.key === "Enter"
-            ) {
-
-                event.preventDefault();
-
-                solveCurrentQuestion();
-
-            }
+            return;
 
         }
-    );
 
-}
+        recognition.lang =
+            currentLanguage === "hi"
+                ? "hi-IN"
+                : "en-IN";
 
+        try {
 
-/* =========================================================
-   CONNECTION STATUS
-   ========================================================= */
+            recognition.start();
 
-function updateConnectionStatus() {
+        } catch (error) {
 
-    const connectionText =
-        document.getElementById(
-            "connectionText"
-        );
-
-    if (!connectionText) {
-        return;
-    }
-
-    const t =
-        TEXT[currentLanguage];
-
-    connectionText.textContent =
-        navigator.onLine
-            ? t.online
-            : t.offline;
-
-}
-
-
-/* =========================================================
-   PWA UPDATE DETECTION
-   ========================================================= */
-
-function setupServiceWorkerUpdate() {
-
-    if (
-        !("serviceWorker" in navigator)
-    ) {
-
-        return;
-
-    }
-
-    navigator.serviceWorker
-        .addEventListener(
-            "controllerchange",
-            function () {
-
-                console.log(
-                    "Math King updated."
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================================================
-   EVENT LISTENERS
-   ========================================================= */
-
-if (englishBtn) {
-
-    englishBtn.addEventListener(
-        "click",
-        function () {
-
-            setLanguage("en");
+            console.error(error);
 
         }
-    );
 
-}
-
-
-if (hindiBtn) {
-
-    hindiBtn.addEventListener(
-        "click",
-        function () {
-
-            setLanguage("hi");
-
-        }
-    );
-
-}
-
-
-if (solveBtn) {
-
-    solveBtn.addEventListener(
-        "click",
-        solveCurrentQuestion
-    );
-
-}
-
-
-if (clearBtn) {
-
-    clearBtn.addEventListener(
-        "click",
-        clearQuestion
-    );
-
-}
-
-
-if (micBtn) {
-
-    micBtn.addEventListener(
-        "click",
-        toggleVoice
-    );
-
-}
-
-
-if (clearHistoryBtn) {
-
-    clearHistoryBtn.addEventListener(
-        "click",
-        clearHistory
-    );
-
-}
-
-
-window.addEventListener(
-    "online",
-    updateConnectionStatus
+    }
 );
 
+
+/* =========================================================
+   PWA INSTALL
+   ========================================================= */
+
 window.addEventListener(
-    "offline",
-    updateConnectionStatus
+    "beforeinstallprompt",
+    function (event) {
+
+        event.preventDefault();
+
+        deferredInstallPrompt =
+            event;
+
+        installBtn.hidden =
+            false;
+
+    }
+);
+
+
+installBtn.addEventListener(
+    "click",
+    async function () {
+
+        if (!deferredInstallPrompt) {
+
+            iosInstallHelp.hidden =
+                false;
+
+            return;
+
+        }
+
+        deferredInstallPrompt.prompt();
+
+        const result =
+            await deferredInstallPrompt.userChoice;
+
+        console.log(
+            "Install choice:",
+            result.outcome
+        );
+
+        deferredInstallPrompt =
+            null;
+
+        installBtn.hidden =
+            true;
+
+    }
+);
+
+
+window.addEventListener(
+    "appinstalled",
+    function () {
+
+        deferredInstallPrompt =
+            null;
+
+        installBtn.hidden =
+            true;
+
+        console.log(
+            "Math King installed."
+        );
+
+    }
 );
 
 
@@ -3983,61 +2667,29 @@ window.addEventListener(
    INITIALIZE
    ========================================================= */
 
-function initMathKing() {
+setLanguage("en");
 
-    setLanguage("en");
+renderHistory();
 
-    setupVoiceRecognition();
-
-    setupExamples();
-
-    setupKeyboard();
-
-    renderHistory();
-
-    updateConnectionStatus();
-
-    setupServiceWorkerUpdate();
-
-}
-
-
-/* =========================================================
-   START
-   ========================================================= */
-
-if (
-    document.readyState === "loading"
-) {
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        initMathKing
-    );
-
-} else {
-
-    initMathKing();
-
-}
+question.focus();
 
 
 /* =========================================================
    PUBLIC API
    ========================================================= */
 
-window.MathAutoSolver = {
+window.MathKing = {
 
-    solve: solveQuestion,
+    solve:
+        solveQuestion,
 
-    detailed: solveDetailedExpression,
+    detailed:
+        solveDetailedExpression,
 
-    history: {
+    normalize:
+        normalizeMath,
 
-        get: getHistory,
-
-        clear: clearHistory
-
-    }
+    history:
+        getHistory
 
 };
