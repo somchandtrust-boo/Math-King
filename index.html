@@ -1,78 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
 
-<meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
 
-<meta
-    name="viewport"
-    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
->
+    <meta
+        name="theme-color"
+        content="#07111f"
+    >
 
-<title>Math King — Real Mathematics Solver</title>
+    <meta
+        name="description"
+        content="Math King - Real Mathematics Question Solver with detailed step-by-step solutions."
+    >
 
-<meta
-    name="description"
-    content="Math King is a real mathematics solver with detailed step-by-step solutions, voice input and calculator-style math keyboard."
->
+    <meta
+        name="application-name"
+        content="Math King"
+    >
 
-<meta name="theme-color" content="#07111f">
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
 
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Math King">
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
 
-<link rel="manifest" href="manifest.json">
+    <meta
+        name="apple-mobile-web-app-title"
+        content="Math King"
+    >
 
-<link
-    rel="apple-touch-icon"
-    href="icons/apple-touch-icon.png"
->
+    <title>Math King — Real Mathematics Solver</title>
 
-<link rel="stylesheet" href="style.css">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+
+    <!-- Favicon -->
+    <link
+        rel="icon"
+        type="image/svg+xml"
+        href="./favicon.svg"
+    >
+
+    <!-- Apple -->
+    <link
+        rel="apple-touch-icon"
+        href="./icons/apple-touch-icon.png"
+    >
+
+    <!-- Main CSS -->
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
 </head>
 
 <body>
 
 <div class="app-shell">
 
-    <!-- HEADER -->
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
     <header class="app-header">
 
         <div class="brand-area">
 
             <div class="brand-icon">
-                👑
+                ∑
             </div>
 
             <div class="brand-text">
-                <h1>Math King</h1>
+
+                <h1>
+                    Math King
+                </h1>
+
                 <p id="appSubtitle">
                     Real Mathematics Question Solver
                 </p>
+
             </div>
 
         </div>
 
 
+        <!-- LANGUAGE -->
         <div class="language-switch">
 
             <button
-                type="button"
                 id="englishBtn"
                 class="language-btn active"
+                type="button"
             >
                 English
             </button>
 
             <button
-                type="button"
                 id="hindiBtn"
                 class="language-btn"
+                type="button"
             >
-                हिन्दी
+                हिंदी
             </button>
 
         </div>
@@ -80,72 +117,104 @@
     </header>
 
 
-    <!-- MAIN -->
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
     <main class="main-container">
 
-        <section class="solver-card">
-
-            <div class="section-heading">
-
-                <div>
-                    <h2 id="questionTitle">
-                        Enter Mathematics Question
-                    </h2>
-
-                    <p id="questionHint">
-                        Type, speak, or use the Math Keyboard.
-                    </p>
-                </div>
-
-            </div>
+        <div class="solver-workspace">
 
 
-            <!-- QUESTION + KEYBOARD -->
-            <div class="solver-workspace">
+            <!-- =================================================
+                 LEFT SIDE — SOLVER
+            ================================================== -->
+            <section class="solver-panel">
 
-                <!-- QUESTION AREA -->
-                <div class="question-area">
+                <!-- QUESTION CARD -->
+                <div class="card question-card">
 
+                    <div class="section-heading">
+
+                        <div>
+                            <h2 id="questionTitle">
+                                Enter Your Mathematics Question
+                            </h2>
+
+                            <p id="questionHint">
+                                Type, paste, or speak your mathematics question.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <!-- QUESTION LABEL -->
                     <label
-                        for="question"
                         id="questionLabel"
+                        for="question"
+                        class="input-label"
                     >
-                        Your Question
+                        Mathematics Question
                     </label>
 
-                    <textarea
-                        id="question"
-                        rows="6"
-                        autocomplete="off"
-                        autocorrect="off"
-                        spellcheck="false"
-                        placeholder="Example: Evaluate (-6) × (-4) + (-20) ÷ 4"
-                    ></textarea>
+
+                    <!-- QUESTION INPUT -->
+                    <div class="question-input-wrapper">
+
+                        <textarea
+                            id="question"
+                            name="question"
+                            rows="6"
+                            autocomplete="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            placeholder="Example: Simplify 4(2x - 3) - 2(x + 5)"
+                        ></textarea>
+
+                        <button
+                            id="backspaceBtn"
+                            class="input-backspace"
+                            type="button"
+                            title="Backspace"
+                            aria-label="Backspace"
+                        >
+                            ⌫
+                        </button>
+
+                    </div>
 
 
                     <!-- VOICE -->
                     <div class="voice-area">
 
                         <button
-                            type="button"
                             id="micBtn"
                             class="mic-btn"
+                            type="button"
                         >
 
-                            <span id="micIcon">🎤</span>
+                            <span
+                                id="micIcon"
+                                class="mic-icon"
+                            >
+                                🎤
+                            </span>
 
-                            <span id="micText">
+                            <span
+                                id="micText"
+                            >
                                 Voice Input
                             </span>
 
                         </button>
 
-                        <span
+                        <div
                             id="voiceStatus"
                             class="voice-status"
+                            aria-live="polite"
                         >
-                            Ready
-                        </span>
+                            Ready for voice input
+                        </div>
 
                     </div>
 
@@ -154,28 +223,40 @@
                     <div class="standard-area">
 
                         <label
-                            for="standard"
                             id="standardLabel"
+                            for="standard"
+                            class="input-label"
                         >
-                            Standard / Class
+                            Class / Standard
                         </label>
 
-                        <select id="standard">
+                        <select
+                            id="standard"
+                            name="standard"
+                        >
 
-                            <option value="basic">
-                                Basic Mathematics
+                            <option value="general">
+                                General Mathematics
+                            </option>
+
+                            <option value="primary">
+                                Primary School
                             </option>
 
                             <option value="middle">
                                 Middle School
                             </option>
 
-                            <option value="high">
-                                High School
+                            <option value="secondary">
+                                Secondary School
                             </option>
 
-                            <option value="advanced">
-                                Advanced Mathematics
+                            <option value="higher">
+                                Higher Secondary
+                            </option>
+
+                            <option value="college">
+                                College / Advanced
                             </option>
 
                         </select>
@@ -183,23 +264,25 @@
                     </div>
 
 
-                    <!-- ACTIONS -->
-                    <div class="main-actions">
+                    <!-- ACTION BUTTONS -->
+                    <div class="action-buttons">
 
                         <button
-                            type="button"
                             id="solveBtn"
                             class="primary-btn"
+                            type="button"
                         >
-                            🧮 Solve
+                            <span>🧮</span>
+                            <span>Solve Question</span>
                         </button>
 
                         <button
-                            type="button"
                             id="clearBtn"
                             class="secondary-btn"
+                            type="button"
                         >
-                            🗑️ Clear
+                            <span>✕</span>
+                            <span>Clear</span>
                         </button>
 
                     </div>
@@ -207,381 +290,753 @@
                 </div>
 
 
-                <!-- MATH KEYBOARD -->
-                <aside class="math-keyboard">
+                <!-- =================================================
+                     EXAMPLES
+                ================================================== -->
+                <div class="card examples-card">
+
+                    <div class="section-heading">
+
+                        <div>
+                            <h2 id="examplesTitle">
+                                Example Questions
+                            </h2>
+
+                            <p>
+                                Tap any example to solve it automatically.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="examples-grid">
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="Evaluate: (-6) × (-4) + (-20) ÷ 4"
+                        >
+                            <span class="example-symbol">➗</span>
+                            <span>
+                                Evaluate: (-6) × (-4) + (-20) ÷ 4
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="25% of 800"
+                        >
+                            <span class="example-symbol">%</span>
+                            <span>
+                                25% of 800
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="√144"
+                        >
+                            <span class="example-symbol">√</span>
+                            <span>
+                                √144
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="12 × 15"
+                        >
+                            <span class="example-symbol">×</span>
+                            <span>
+                                12 × 15
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="HCF of 24 and 36"
+                        >
+                            <span class="example-symbol">HCF</span>
+                            <span>
+                                HCF of 24 and 36
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="LCM of 12 and 18"
+                        >
+                            <span class="example-symbol">LCM</span>
+                            <span>
+                                LCM of 12 and 18
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="Average of 10, 20, 30, 40"
+                        >
+                            <span class="example-symbol">AVG</span>
+                            <span>
+                                Average of 10, 20, 30, 40
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="2x + 5 = 15"
+                        >
+                            <span class="example-symbol">x</span>
+                            <span>
+                                2x + 5 = 15
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="Simplify: 4(2x - 3) - 2(x + 5)"
+                        >
+                            <span class="example-symbol">ƒ</span>
+                            <span>
+                                Simplify: 4(2x - 3) - 2(x + 5)
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="Expand: (x + 2)(x + 3)"
+                        >
+                            <span class="example-symbol">×</span>
+                            <span>
+                                Expand: (x + 2)(x + 3)
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="3x² + 5x - 2 = 0"
+                        >
+                            <span class="example-symbol">x²</span>
+                            <span>
+                                3x² + 5x - 2 = 0
+                            </span>
+                        </button>
+
+
+                        <button
+                            class="example-btn"
+                            type="button"
+                            data-example="2³ + 4²"
+                        >
+                            <span class="example-symbol">^</span>
+                            <span>
+                                2³ + 4²
+                            </span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     RESULT
+                ================================================== -->
+                <section
+                    id="resultSection"
+                    class="card result-card"
+                    hidden
+                >
+
+                    <!-- ANSWER -->
+                    <div class="answer-block">
+
+                        <div class="result-heading">
+
+                            <div class="result-icon">
+                                ✓
+                            </div>
+
+                            <h2 id="answerTitle">
+                                Final Answer
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            id="answer"
+                            class="answer-content"
+                            aria-live="polite"
+                        ></div>
+
+                    </div>
+
+
+                    <!-- STEPS -->
+                    <div class="steps-block">
+
+                        <div class="result-heading">
+
+                            <div class="result-icon">
+                                ≡
+                            </div>
+
+                            <h2 id="stepsTitle">
+                                Detailed Step-by-Step Solution
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            id="steps"
+                            class="steps-content"
+                        ></div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     HISTORY
+                ================================================== -->
+                <section class="card history-card">
+
+                    <div class="history-header">
+
+                        <div>
+
+                            <h2 id="historyTitle">
+                                Calculation History
+                            </h2>
+
+                            <p>
+                                Your previous calculations are saved on this device.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            id="clearHistoryBtn"
+                            class="history-clear-btn"
+                            type="button"
+                        >
+                            🗑️
+                            <span id="clearHistoryText">
+                                Clear History
+                            </span>
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="historyList"
+                        class="history-list"
+                    ></div>
+
+                </section>
+
+            </section>
+
+
+            <!-- =================================================
+                 RIGHT SIDE — MATH KEYBOARD
+            ================================================== -->
+            <aside class="keyboard-panel">
+
+                <div class="card math-keyboard-card">
 
                     <div class="keyboard-header">
 
                         <div>
-                            <strong>🧮 Math Keyboard</strong>
 
-                            <small>
-                                Tap a symbol to insert
-                            </small>
+                            <h2>
+                                Math Keyboard
+                            </h2>
+
+                            <p>
+                                Insert mathematical symbols easily.
+                            </p>
+
                         </div>
 
                         <button
+                            id="deleteAllBtn"
+                            class="keyboard-clear"
                             type="button"
-                            id="backspaceBtn"
-                            class="keyboard-special"
-                            title="Backspace"
+                            title="Clear input"
                         >
-                            ⌫
+                            AC
                         </button>
 
                     </div>
 
 
-                    <!-- NUMBERS -->
-                    <div class="key-section">
+                    <!-- =================================================
+                         NUMBERS
+                    ================================================== -->
+                    <div class="keyboard-section">
 
-                        <div class="key-section-title">
+                        <div class="keyboard-section-title">
                             Numbers
                         </div>
 
-                        <div class="math-key-grid numbers">
+                        <div class="number-grid">
 
-                            <button type="button" class="math-key" data-symbol="7">7</button>
-                            <button type="button" class="math-key" data-symbol="8">8</button>
-                            <button type="button" class="math-key" data-symbol="9">9</button>
+                            <button class="math-key" data-symbol="7" type="button">7</button>
+                            <button class="math-key" data-symbol="8" type="button">8</button>
+                            <button class="math-key" data-symbol="9" type="button">9</button>
 
-                            <button type="button" class="math-key" data-symbol="4">4</button>
-                            <button type="button" class="math-key" data-symbol="5">5</button>
-                            <button type="button" class="math-key" data-symbol="6">6</button>
+                            <button class="math-key" data-symbol="4" type="button">4</button>
+                            <button class="math-key" data-symbol="5" type="button">5</button>
+                            <button class="math-key" data-symbol="6" type="button">6</button>
 
-                            <button type="button" class="math-key" data-symbol="1">1</button>
-                            <button type="button" class="math-key" data-symbol="2">2</button>
-                            <button type="button" class="math-key" data-symbol="3">3</button>
+                            <button class="math-key" data-symbol="1" type="button">1</button>
+                            <button class="math-key" data-symbol="2" type="button">2</button>
+                            <button class="math-key" data-symbol="3" type="button">3</button>
 
-                            <button type="button" class="math-key wide-key" data-symbol="0">0</button>
-                            <button type="button" class="math-key" data-symbol=".">.</button>
+                            <button class="math-key zero-key" data-symbol="0" type="button">0</button>
+                            <button class="math-key" data-symbol="." type="button">.</button>
+                            <button class="math-key operator-key" data-symbol="=" type="button">=</button>
 
                         </div>
 
                     </div>
 
 
-                    <!-- BASIC OPERATORS -->
-                    <div class="key-section">
+                    <!-- =================================================
+                         BASIC OPERATORS
+                    ================================================== -->
+                    <div class="keyboard-section">
 
-                        <div class="key-section-title">
+                        <div class="keyboard-section-title">
                             Basic Operators
                         </div>
 
-                        <div class="math-key-grid">
+                        <div class="operator-grid">
 
-                            <button type="button" class="math-key operator-key" data-symbol="+">+</button>
+                            <button
+                                class="math-key operator-key"
+                                data-symbol="+"
+                                type="button"
+                            >
+                                +
+                            </button>
 
-                            <button type="button" class="math-key operator-key" data-symbol="−">−</button>
+                            <button
+                                class="math-key operator-key"
+                                data-symbol="−"
+                                type="button"
+                            >
+                                −
+                            </button>
 
-                            <button type="button" class="math-key operator-key" data-symbol="×">×</button>
+                            <button
+                                class="math-key operator-key"
+                                data-symbol="×"
+                                type="button"
+                            >
+                                ×
+                            </button>
 
-                            <button type="button" class="math-key operator-key" data-symbol="÷">÷</button>
+                            <button
+                                class="math-key operator-key"
+                                data-symbol="÷"
+                                type="button"
+                            >
+                                ÷
+                            </button>
 
-                            <button type="button" class="math-key operator-key" data-symbol="%">%</button>
+                            <button
+                                class="math-key operator-key"
+                                data-symbol="^"
+                                type="button"
+                            >
+                                ^
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="=">=</button>
+                            <button
+                                class="math-key operator-key"
+                                data-symbol="%"
+                                type="button"
+                            >
+                                %
+                            </button>
 
                         </div>
 
                     </div>
 
 
-                    <!-- BRACKETS -->
-                    <div class="key-section">
+                    <!-- =================================================
+                         BRACKETS
+                    ================================================== -->
+                    <div class="keyboard-section">
 
-                        <div class="key-section-title">
+                        <div class="keyboard-section-title">
                             Brackets
                         </div>
 
-                        <div class="math-key-grid">
+                        <div class="operator-grid">
 
-                            <button type="button" class="math-key" data-symbol="(">(</button>
-                            <button type="button" class="math-key" data-symbol=")">)</button>
+                            <button
+                                class="math-key"
+                                data-symbol="("
+                                type="button"
+                            >
+                                (
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="[">[</button>
-                            <button type="button" class="math-key" data-symbol="]">]</button>
+                            <button
+                                class="math-key"
+                                data-symbol=")"
+                                type="button"
+                            >
+                                )
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="{">{</button>
-                            <button type="button" class="math-key" data-symbol="}">}</button>
+                            <button
+                                class="math-key"
+                                data-symbol="["
+                                type="button"
+                            >
+                                [
+                            </button>
 
-                        </div>
+                            <button
+                                class="math-key"
+                                data-symbol="]"
+                                type="button"
+                            >
+                                ]
+                            </button>
 
-                    </div>
+                            <button
+                                class="math-key"
+                                data-symbol="{"
+                                type="button"
+                            >
+                                {
+                            </button>
 
-
-                    <!-- POWERS -->
-                    <div class="key-section">
-
-                        <div class="key-section-title">
-                            Powers & Roots
-                        </div>
-
-                        <div class="math-key-grid">
-
-                            <button type="button" class="math-key special-key" data-symbol="√">√</button>
-
-                            <button type="button" class="math-key special-key" data-symbol="^">^</button>
-
-                            <button type="button" class="math-key special-key" data-symbol="²">²</button>
-
-                            <button type="button" class="math-key special-key" data-symbol="³">³</button>
-
-                            <button type="button" class="math-key special-key" data-symbol="ⁿ">ⁿ</button>
-
-                            <button type="button" class="math-key special-key" data-symbol="!">!</button>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- COMPARISON -->
-                    <div class="key-section">
-
-                        <div class="key-section-title">
-                            Comparison
-                        </div>
-
-                        <div class="math-key-grid">
-
-                            <button type="button" class="math-key" data-symbol="±">±</button>
-
-                            <button type="button" class="math-key" data-symbol="≠">≠</button>
-
-                            <button type="button" class="math-key" data-symbol="<"><</button>
-
-                            <button type="button" class="math-key" data-symbol=">">></button>
-
-                            <button type="button" class="math-key" data-symbol="≤">≤</button>
-
-                            <button type="button" class="math-key" data-symbol="≥">≥</button>
+                            <button
+                                class="math-key"
+                                data-symbol="}"
+                                type="button"
+                            >
+                                }
+                            </button>
 
                         </div>
 
                     </div>
 
 
-                    <!-- ADVANCED -->
-                    <div class="key-section">
+                    <!-- =================================================
+                         ADVANCED SYMBOLS
+                    ================================================== -->
+                    <div class="keyboard-section">
 
-                        <div class="key-section-title">
-                            Advanced Math
+                        <div class="keyboard-section-title">
+                            Advanced Symbols
                         </div>
 
-                        <div class="math-key-grid">
+                        <div class="advanced-grid">
 
-                            <button type="button" class="math-key" data-symbol="π">π</button>
+                            <button
+                                class="math-key special-key"
+                                data-symbol="√"
+                                type="button"
+                            >
+                                √
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="∞">∞</button>
+                            <button
+                                class="math-key special-key"
+                                data-symbol="²"
+                                type="button"
+                            >
+                                x²
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="Δ">Δ</button>
+                            <button
+                                class="math-key special-key"
+                                data-symbol="³"
+                                type="button"
+                            >
+                                x³
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="∑">∑</button>
+                            <button
+                                class="math-key special-key"
+                                data-symbol="π"
+                                type="button"
+                            >
+                                π
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="∏">∏</button>
+                            <button
+                                class="math-key special-key"
+                                data-symbol="∞"
+                                type="button"
+                            >
+                                ∞
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="°">°</button>
+                            <button
+                                class="math-key special-key"
+                                data-symbol="±"
+                                type="button"
+                            >
+                                ±
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="≤"
+                                type="button"
+                            >
+                                ≤
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="≥"
+                                type="button"
+                            >
+                                ≥
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="≠"
+                                type="button"
+                            >
+                                ≠
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="≈"
+                                type="button"
+                            >
+                                ≈
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="Δ"
+                                type="button"
+                            >
+                                Δ
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="∑"
+                                type="button"
+                            >
+                                ∑
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="∏"
+                                type="button"
+                            >
+                                ∏
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="|x|"
+                                type="button"
+                            >
+                                |x|
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="°"
+                                type="button"
+                            >
+                                °
+                            </button>
+
+                            <button
+                                class="math-key special-key"
+                                data-symbol="!"
+                                type="button"
+                            >
+                                !
+                            </button>
 
                         </div>
 
                     </div>
 
 
-                    <!-- FRACTIONS -->
-                    <div class="key-section">
+                    <!-- =================================================
+                         VARIABLES
+                    ================================================== -->
+                    <div class="keyboard-section">
 
-                        <div class="key-section-title">
-                            Fractions
+                        <div class="keyboard-section-title">
+                            Algebra
                         </div>
 
-                        <div class="math-key-grid">
+                        <div class="advanced-grid">
 
-                            <button type="button" class="math-key" data-symbol="½">½</button>
+                            <button
+                                class="math-key"
+                                data-symbol="x"
+                                type="button"
+                            >
+                                x
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="⅓">⅓</button>
+                            <button
+                                class="math-key"
+                                data-symbol="y"
+                                type="button"
+                            >
+                                y
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="¼">¼</button>
+                            <button
+                                class="math-key"
+                                data-symbol="a"
+                                type="button"
+                            >
+                                a
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="¾">¾</button>
+                            <button
+                                class="math-key"
+                                data-symbol="b"
+                                type="button"
+                            >
+                                b
+                            </button>
 
-                            <button type="button" class="math-key fraction-key" data-symbol="a/b">a/b</button>
+                            <button
+                                class="math-key"
+                                data-symbol="c"
+                                type="button"
+                            >
+                                c
+                            </button>
 
-                            <button type="button" class="math-key" data-symbol="|x|">|x|</button>
+                            <button
+                                class="math-key"
+                                data-symbol="n"
+                                type="button"
+                            >
+                                n
+                            </button>
 
                         </div>
 
                     </div>
 
 
-                    <div class="keyboard-footer">
+                    <!-- =================================================
+                         SPECIAL INSERT
+                    ================================================== -->
+                    <div class="keyboard-section">
 
-                        <button
-                            type="button"
-                            id="deleteAllBtn"
-                            class="keyboard-clear"
-                        >
-                            Clear Keyboard
-                        </button>
+                        <div class="keyboard-section-title">
+                            Quick Insert
+                        </div>
+
+                        <div class="quick-grid">
+
+                            <button
+                                class="math-key fraction-key"
+                                data-symbol="a/b"
+                                type="button"
+                            >
+                                a⁄b
+                            </button>
+
+                            <button
+                                class="math-key wide-key"
+                                data-symbol="√("
+                                type="button"
+                            >
+                                √(
+                            </button>
+
+                            <button
+                                class="math-key wide-key"
+                                data-symbol="x²"
+                                type="button"
+                            >
+                                x²
+                            </button>
+
+                            <button
+                                class="math-key wide-key"
+                                data-symbol="x³"
+                                type="button"
+                            >
+                                x³
+                            </button>
+
+                        </div>
 
                     </div>
 
-                </aside>
 
-            </div>
+                    <!-- BACKSPACE -->
+                    <button
+                        id="keyboardBackspaceBtn"
+                        class="full-backspace-btn"
+                        type="button"
+                    >
+                        ⌫ Backspace
+                    </button>
 
-        </section>
+                </div>
 
+            </aside>
 
-        <!-- EXAMPLES -->
-        <section class="examples-section">
-
-            <h2 id="examplesTitle">
-                Example Questions
-            </h2>
-
-            <div class="example-grid">
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="Evaluate: (-6) × (-4) + (-20) ÷ 4"
-                >
-                    (-6) × (-4) + (-20) ÷ 4
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="25% of 800"
-                >
-                    25% of 800
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="√144"
-                >
-                    √144
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="12 × 15"
-                >
-                    12 × 15
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="HCF of 24 and 36"
-                >
-                    HCF of 24 and 36
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="LCM of 12 and 18"
-                >
-                    LCM of 12 and 18
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="Average of 10, 20, 30, 40"
-                >
-                    Average of 10, 20, 30, 40
-                </button>
-
-                <button
-                    type="button"
-                    class="example-btn"
-                    data-example="2x + 5 = 15"
-                >
-                    2x + 5 = 15
-                </button>
-
-            </div>
-
-        </section>
+        </div>
 
 
-        <!-- RESULT -->
+        <!-- =================================================
+             PWA INSTALL
+        ================================================== -->
         <section
-            id="resultSection"
-            class="result-section"
+            id="installCard"
+            class="card install-card"
             hidden
         >
-
-            <div class="result-header">
-
-                <h2 id="answerTitle">
-                    Answer
-                </h2>
-
-            </div>
-
-            <div
-                id="answer"
-                class="answer-box"
-                aria-live="polite"
-            ></div>
-
-
-            <div class="steps-container">
-
-                <h3 id="stepsTitle">
-                    Detailed Solution
-                </h3>
-
-                <div
-                    id="steps"
-                    class="steps-box"
-                ></div>
-
-            </div>
-
-        </section>
-
-
-        <!-- HISTORY -->
-        <section class="history-section">
-
-            <div class="history-header">
-
-                <h2 id="historyTitle">
-                    History
-                </h2>
-
-                <button
-                    type="button"
-                    id="clearHistoryBtn"
-                    class="history-clear-btn"
-                >
-                    🗑️
-                    <span id="clearHistoryText">
-                        Clear History
-                    </span>
-                </button>
-
-            </div>
-
-
-            <div
-                id="historyList"
-                class="history-list"
-            ></div>
-
-        </section>
-
-
-        <!-- PWA INSTALL -->
-        <section class="install-card">
 
             <div class="install-content">
 
@@ -591,98 +1046,67 @@
 
                 <div>
 
-                    <h3 id="installTitle">
+                    <h2 id="installTitle">
                         Install Math King
-                    </h3>
+                    </h2>
 
                     <p id="installDescription">
-                        Install Math King on your Android, iPhone or desktop.
+                        Install Math King on your phone or computer for quick access.
                     </p>
+
+                    <div
+                        id="iosInstallHelp"
+                        class="ios-install-help"
+                        hidden
+                    >
+                        On iPhone/iPad: tap Share → Add to Home Screen.
+                    </div>
 
                 </div>
 
             </div>
 
+
             <button
-                type="button"
                 id="installBtn"
                 class="install-btn"
-                hidden
+                type="button"
             >
                 Install App
             </button>
 
         </section>
 
-
-        <!-- IOS HELP -->
-        <section
-            id="iosInstallHelp"
-            class="ios-install-help"
-            hidden
-        >
-
-            <strong>
-                🍎 iPhone / iPad
-            </strong>
-
-            <p>
-                Safari में Share दबाएँ → Add to Home Screen चुनें।
-            </p>
-
-        </section>
-
     </main>
 
 
-    <!-- FOOTER -->
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
     <footer class="app-footer">
 
-        <p>
-            👑 Math King — Real Mathematics Solver
-        </p>
+        <div>
+            <strong>Math King</strong>
+            — Real Mathematics Solver
+        </div>
 
-        <p>
-            Detailed Mathematics • Voice • Hindi + English
-        </p>
+        <div>
+            Detailed Solutions • English • हिंदी • Voice
+        </div>
 
     </footer>
 
 </div>
 
 
-<script src="script.js"></script>
+<!-- =========================================================
+     JAVASCRIPT
+     IMPORTANT:
+     Service Worker registration is handled by script.js.
+     Do NOT add another inline registration here.
+========================================================= -->
 
-<script>
-
-if ("serviceWorker" in navigator) {
-
-    window.addEventListener("load", function () {
-
-        navigator.serviceWorker
-            .register("./service-worker.js")
-            .then(function (registration) {
-
-                console.log(
-                    "Math King Service Worker:",
-                    registration.scope
-                );
-
-            })
-            .catch(function (error) {
-
-                console.error(
-                    "Service Worker Error:",
-                    error
-                );
-
-            });
-
-    });
-
-}
-
-</script>
+<script src="./script.js"></script>
 
 </body>
 </html>
