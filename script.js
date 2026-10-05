@@ -1,125 +1,31 @@
-/* =========================================================
-   MATH KING — ADVANCED MATHEMATICS ENGINE
-   Complete script.js replacement
-   ========================================================= */
-
 "use strict";
 
 /* =========================================================
-   CONFIG
+   MATH KING — COMPLETE FIXED MATHEMATICS ENGINE
+   Version: 4.0
    ========================================================= */
 
-const HISTORY_KEY = "mathKingHistory";
-const LEGACY_HISTORY_KEY = "mathSolverHistory";
+console.log("Math King Advanced Mathematics Engine Ready.");
+
+
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
 
 let currentLanguage = "en";
 let recognition = null;
 let isListening = false;
 let deferredInstallPrompt = null;
 
-
-/* =========================================================
-   TEXT
-   ========================================================= */
-
-const TEXT = {
-    en: {
-        appSubtitle: "Real Mathematics Question Solver",
-        questionTitle: "Enter Your Mathematics Question",
-        questionHint: "Type, paste, or use the microphone.",
-        questionLabel: "Mathematics Question",
-        micText: "Voice Input",
-        listening: "Listening...",
-        micReady: "Tap microphone and speak your question.",
-        standardLabel: "Class / Standard",
-        solve: "Solve Question",
-        clear: "Clear",
-        backspace: "Backspace",
-        deleteAll: "Clear All",
-        examplesTitle: "Try Examples",
-        answerTitle: "Final Answer",
-        stepsTitle: "Detailed Solution",
-        historyTitle: "History",
-        clearHistoryText: "Clear History",
-        installTitle: "Install Math King",
-        installDescription: "Install Math King on your device for quick access.",
-        installButton: "Install App",
-        iosHelp:
-            "On iPhone/iPad: tap Share → Add to Home Screen.",
-        noQuestion: "Please enter a mathematics question.",
-        unable:
-            "I could not understand this question yet. Try writing it in a simpler mathematical form.",
-        finalAnswer: "Final Answer",
-        step: "Step"
-    },
-
-    hi: {
-        appSubtitle: "Real Mathematics Question Solver",
-        questionTitle: "अपना गणित का प्रश्न लिखें",
-        questionHint: "प्रश्न लिखें, paste करें या microphone का उपयोग करें।",
-        questionLabel: "गणित का प्रश्न",
-        micText: "आवाज़ से लिखें",
-        listening: "सुन रहा हूँ...",
-        micReady: "Microphone दबाकर अपना प्रश्न बोलें।",
-        standardLabel: "कक्षा / Standard",
-        solve: "प्रश्न हल करें",
-        clear: "Clear",
-        backspace: "Backspace",
-        deleteAll: "सभी हटाएँ",
-        examplesTitle: "उदाहरण",
-        answerTitle: "अंतिम उत्तर",
-        stepsTitle: "पूरी Solution",
-        historyTitle: "History",
-        clearHistoryText: "History साफ करें",
-        installTitle: "Math King Install करें",
-        installDescription: "Math King को अपने device में install करें।",
-        installButton: "App Install करें",
-        iosHelp:
-            "iPhone/iPad: Share → Add to Home Screen दबाएँ।",
-        noQuestion: "कृपया गणित का प्रश्न लिखें।",
-        unable:
-            "मैं इस प्रश्न को अभी समझ नहीं पाया। कृपया इसे थोड़े सरल mathematical form में लिखें।",
-        finalAnswer: "अंतिम उत्तर",
-        step: "चरण"
-    }
-};
+const HISTORY_KEY = "mathKingHistory";
+const OLD_HISTORY_KEY = "mathSolverHistory";
 
 
 /* =========================================================
-   DOM
+   DOM HELPERS
    ========================================================= */
 
 const $ = id => document.getElementById(id);
-
-const questionInput = $("question");
-const answerBox = $("answer");
-const stepsBox = $("steps");
-const resultSection = $("resultSection");
-const historyList = $("historyList");
-
-const englishBtn = $("englishBtn");
-const hindiBtn = $("hindiBtn");
-
-const solveBtn = $("solveBtn");
-const clearBtn = $("clearBtn");
-
-const micBtn = $("micBtn");
-const micIcon = $("micIcon");
-const micText = $("micText");
-const voiceStatus = $("voiceStatus");
-
-const standardSelect = $("standard");
-
-const backspaceBtn = $("backspaceBtn");
-const deleteAllBtn = $("clearHistoryBtn");
-
-const installBtn = $("installBtn");
-const iosInstallHelp = $("iosInstallHelp");
-
-
-/* =========================================================
-   BASIC HELPERS
-   ========================================================= */
 
 function escapeHTML(value) {
     return String(value)
@@ -130,24 +36,42 @@ function escapeHTML(value) {
         .replace(/'/g, "&#039;");
 }
 
+function cleanNumber(value) {
+    if (!Number.isFinite(value)) {
+        return value;
+    }
+
+    if (Math.abs(value) < 1e-12) {
+        return 0;
+    }
+
+    const rounded = Math.round(value * 1e12) / 1e12;
+
+    return rounded;
+}
 
 function formatNumber(value) {
-    if (!Number.isFinite(value)) {
+    value = cleanNumber(value);
+
+    if (typeof value !== "number") {
         return String(value);
     }
 
-    if (Math.abs(value - Math.round(value)) < 1e-12) {
-        return String(Math.round(value));
+    if (Number.isInteger(value)) {
+        return String(value);
     }
 
-    return String(Number(value.toFixed(12)));
+    return String(Number(value.toFixed(10)));
 }
 
+function signedNumber(value) {
+    value = cleanNumber(value);
 
-function cleanSpaces(text) {
-    return String(text || "")
-        .replace(/\s+/g, " ")
-        .trim();
+    if (value > 0) {
+        return "+" + formatNumber(value);
+    }
+
+    return formatNumber(value);
 }
 
 
@@ -155,94 +79,209 @@ function cleanSpaces(text) {
    LANGUAGE
    ========================================================= */
 
-function setLanguage(language) {
+const TEXT = {
 
-    currentLanguage = language === "hi" ? "hi" : "en";
+    en: {
+        subtitle: "Real Mathematics Question Solver",
+        questionTitle: "Enter Your Mathematics Question",
+        questionHint: "Type, paste, or speak your mathematics question.",
+        questionLabel: "Mathematics Question",
+        standard: "Class / Standard",
+        solve: "Solve Question",
+        clear: "Clear",
+        voiceReady: "Ready for voice input",
+        listening: "Listening...",
+        voiceUnsupported: "Voice input is not supported in this browser.",
+        voiceStopped: "Voice input stopped.",
+        examples: "Example Questions",
+        answer: "Final Answer",
+        steps: "Detailed Step-by-Step Solution",
+        history: "Calculation History",
+        clearHistory: "Clear History",
+        noHistory: "No calculations yet.",
+        installTitle: "Install Math King",
+        installDescription: "Install Math King on your phone or computer for quick access.",
+        install: "Install App",
+        iosHelp: "On iPhone/iPad: tap Share → Add to Home Screen.",
+        enterQuestion: "Please enter a mathematics question.",
+        cannotSolve: "I could not understand this question.",
+        finalAnswer: "Final Answer",
+        expression: "Expression",
+        solution: "Solution"
+    },
+
+    hi: {
+        subtitle: "वास्तविक गणित प्रश्न हल करने वाला",
+        questionTitle: "अपना गणित का प्रश्न लिखें",
+        questionHint: "प्रश्न लिखें, पेस्ट करें या बोलकर पूछें।",
+        questionLabel: "गणित का प्रश्न",
+        standard: "कक्षा / स्तर",
+        solve: "प्रश्न हल करें",
+        clear: "साफ करें",
+        voiceReady: "Voice input के लिए तैयार",
+        listening: "सुन रहा हूँ...",
+        voiceUnsupported: "इस browser में voice input उपलब्ध नहीं है।",
+        voiceStopped: "Voice input बंद किया गया।",
+        examples: "उदाहरण प्रश्न",
+        answer: "अंतिम उत्तर",
+        steps: "विस्तृत Step-by-Step समाधान",
+        history: "Calculation History",
+        clearHistory: "History साफ करें",
+        noHistory: "अभी कोई calculation नहीं है।",
+        installTitle: "Math King Install करें",
+        installDescription: "Math King को phone या computer में install करें।",
+        install: "App Install करें",
+        iosHelp: "iPhone/iPad में Share → Add to Home Screen दबाएँ।",
+        enterQuestion: "कृपया गणित का प्रश्न लिखें।",
+        cannotSolve: "मैं इस प्रश्न को समझ नहीं पाया।",
+        finalAnswer: "अंतिम उत्तर",
+        expression: "Expression",
+        solution: "समाधान"
+    }
+
+};
+
+
+/* =========================================================
+   LANGUAGE UI
+   ========================================================= */
+
+function setLanguage(lang) {
+
+    currentLanguage = lang === "hi" ? "hi" : "en";
 
     document.documentElement.lang =
         currentLanguage === "hi" ? "hi" : "en";
 
     const t = TEXT[currentLanguage];
 
-    const mapping = {
-        appSubtitle: t.appSubtitle,
-        questionTitle: t.questionTitle,
-        questionHint: t.questionHint,
-        questionLabel: t.questionLabel,
-        standardLabel: t.standardLabel,
-        solveBtn: t.solve,
-        clearBtn: t.clear,
-        examplesTitle: t.examplesTitle,
-        answerTitle: t.answerTitle,
-        stepsTitle: t.stepsTitle,
-        historyTitle: t.historyTitle,
-        clearHistoryText: t.clearHistoryText,
-        installTitle: t.installTitle,
-        installDescription: t.installDescription,
-        installBtn: t.installButton
-    };
-
-    Object.keys(mapping).forEach(id => {
-        const el = $(id);
-        if (el) el.textContent = mapping[id];
-    });
-
-    if (!isListening && micText) {
-        micText.textContent = t.micText;
+    if ($("appSubtitle")) {
+        $("appSubtitle").textContent = t.subtitle;
     }
 
-    if (voiceStatus) {
-        voiceStatus.textContent = t.micReady;
+    if ($("questionTitle")) {
+        $("questionTitle").textContent = t.questionTitle;
     }
 
-    if (englishBtn) {
-        englishBtn.classList.toggle(
+    if ($("questionHint")) {
+        $("questionHint").textContent = t.questionHint;
+    }
+
+    if ($("questionLabel")) {
+        $("questionLabel").textContent = t.questionLabel;
+    }
+
+    if ($("standardLabel")) {
+        $("standardLabel").textContent = t.standard;
+    }
+
+    if ($("solveBtn")) {
+        const span = $("solveBtn").querySelector("span:last-child");
+        if (span) span.textContent = t.solve;
+    }
+
+    if ($("clearBtn")) {
+        const span = $("clearBtn").querySelector("span:last-child");
+        if (span) span.textContent = t.clear;
+    }
+
+    if ($("micText") && !isListening) {
+        $("micText").textContent =
+            currentLanguage === "hi"
+                ? "Voice Input"
+                : "Voice Input";
+    }
+
+    if ($("voiceStatus") && !isListening) {
+        $("voiceStatus").textContent = t.voiceReady;
+    }
+
+    if ($("examplesTitle")) {
+        $("examplesTitle").textContent = t.examples;
+    }
+
+    if ($("answerTitle")) {
+        $("answerTitle").textContent = t.answer;
+    }
+
+    if ($("stepsTitle")) {
+        $("stepsTitle").textContent = t.steps;
+    }
+
+    if ($("historyTitle")) {
+        $("historyTitle").textContent = t.history;
+    }
+
+    if ($("clearHistoryText")) {
+        $("clearHistoryText").textContent = t.clearHistory;
+    }
+
+    if ($("installTitle")) {
+        $("installTitle").textContent = t.installTitle;
+    }
+
+    if ($("installDescription")) {
+        $("installDescription").textContent = t.installDescription;
+    }
+
+    if ($("installBtn")) {
+        $("installBtn").textContent = t.install;
+    }
+
+    if ($("iosInstallHelp")) {
+        $("iosInstallHelp").textContent = t.iosHelp;
+    }
+
+    if ($("englishBtn")) {
+        $("englishBtn").classList.toggle(
             "active",
             currentLanguage === "en"
         );
     }
 
-    if (hindiBtn) {
-        hindiBtn.classList.toggle(
+    if ($("hindiBtn")) {
+        $("hindiBtn").classList.toggle(
             "active",
             currentLanguage === "hi"
         );
     }
-
-    renderHistory();
 }
 
 
 /* =========================================================
-   NORMALIZE MATHEMATICS
+   NORMALIZE MATHEMATICS TEXT
    ========================================================= */
 
 function normalizeMath(input) {
 
-    let text = String(input || "");
+    let s = String(input || "").trim();
 
-    text = text
+    if (!s) {
+        return "";
+    }
+
+    s = s
         .replace(/[−–—]/g, "-")
-        .replace(/×/g, "*")
-        .replace(/÷/g, "/")
-        .replace(/·/g, "*")
-        .replace(/π/g, "PI")
-        .replace(/∞/g, "Infinity")
-        .replace(/√/g, "sqrt")
-        .replace(/≤/g, "<=")
-        .replace(/≥/g, ">=")
-        .replace(/≠/g, "!=")
-        .replace(/²/g, "^2")
-        .replace(/³/g, "^3")
-        .replace(/⁴/g, "^4")
-        .replace(/⁵/g, "^5")
-        .replace(/⁶/g, "^6")
-        .replace(/⁷/g, "^7")
-        .replace(/⁸/g, "^8")
-        .replace(/⁹/g, "^9")
-        .replace(/⁰/g, "^0");
+        .replace(/[×✕✖]/g, "*")
+        .replace(/[÷]/g, "/")
+        .replace(/[·]/g, "*")
+        .replace(/[π]/g, "pi")
+        .replace(/[√]/g, "sqrt")
+        .replace(/[²]/g, "^2")
+        .replace(/[³]/g, "^3")
+        .replace(/[⁴]/g, "^4")
+        .replace(/[⁵]/g, "^5")
+        .replace(/[⁶]/g, "^6")
+        .replace(/[⁷]/g, "^7")
+        .replace(/[⁸]/g, "^8")
+        .replace(/[⁹]/g, "^9")
+        .replace(/[⁰]/g, "^0")
+        .replace(/∞/g, "infinity")
+        .replace(/,/g, ",")
+        .replace(/\s+/g, " ")
+        .trim();
 
-    return cleanSpaces(text);
+    return s;
 }
 
 
@@ -250,213 +289,582 @@ function normalizeMath(input) {
    VOICE NORMALIZATION
    ========================================================= */
 
-function normalizeVoiceText(text) {
+const WORD_NUMBERS_EN = {
+    zero: 0,
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+    eleven: 11,
+    twelve: 12,
+    thirteen: 13,
+    fourteen: 14,
+    fifteen: 15,
+    sixteen: 16,
+    seventeen: 17,
+    eighteen: 18,
+    nineteen: 19,
+    twenty: 20,
+    thirty: 30,
+    forty: 40,
+    fifty: 50,
+    sixty: 60,
+    seventy: 70,
+    eighty: 80,
+    ninety: 90,
+    hundred: 100,
+    thousand: 1000
+};
 
-    let value = String(text || "").toLowerCase();
+const WORD_NUMBERS_HI = {
+    "शून्य": 0,
+    "एक": 1,
+    "दो": 2,
+    "तीन": 3,
+    "चार": 4,
+    "पाँच": 5,
+    "पांच": 5,
+    "छह": 6,
+    "छः": 6,
+    "सात": 7,
+    "आठ": 8,
+    "नौ": 9,
+    "दस": 10,
+    "ग्यारह": 11,
+    "बारह": 12,
+    "तेरह": 13,
+    "चौदह": 14,
+    "पंद्रह": 15,
+    "सोलह": 16,
+    "सत्रह": 17,
+    "अठारह": 18,
+    "उन्नीस": 19,
+    "बीस": 20,
+    "तीस": 30,
+    "चालीस": 40,
+    "पचास": 50,
+    "साठ": 60,
+    "सत्तर": 70,
+    "अस्सी": 80,
+    "नब्बे": 90,
+    "सौ": 100,
+    "हजार": 1000
+};
+
+function normalizeVoiceText(input) {
+
+    let s = String(input || "")
+        .toLowerCase()
+        .trim();
 
     const replacements = [
-        [/\btimes\b/g, "*"],
+
         [/\bmultiplied by\b/g, "*"],
-        [/\bdivide by\b/g, "/"],
+        [/\bmultiply by\b/g, "*"],
+        [/\btimes\b/g, "*"],
+        [/\binto\b/g, "*"],
+
         [/\bdivided by\b/g, "/"],
+        [/\bdivide by\b/g, "/"],
+
         [/\bplus\b/g, "+"],
+        [/\badd\b/g, "+"],
+
         [/\bminus\b/g, "-"],
         [/\bsubtract\b/g, "-"],
-        [/\badd\b/g, "+"],
-        [/\bequals\b/g, "="],
-        [/\bis equal to\b/g, "="],
-        [/\bpercent\b/g, "%"],
-        [/\bsquare root of\b/g, "sqrt "],
-        [/\bsquare root\b/g, "sqrt "],
+
+        [/\bto the power of\b/g, "^"],
         [/\bpower of\b/g, "^"],
+        [/\bsquared\b/g, "^2"],
+        [/\bcubed\b/g, "^3"],
+
+        [/\bsquare root of\b/g, "sqrt"],
+        [/\bsquare root\b/g, "sqrt"],
+
+        [/\bpercent of\b/g, "% of"],
+        [/\bpercentage of\b/g, "% of"],
+
+        [/\bgreater than or equal to\b/g, ">="],
+        [/\bless than or equal to\b/g, "<="],
+        [/\bgreater than\b/g, ">"],
+        [/\bless than\b/g, "<"],
+
         [/\bopen bracket\b/g, "("],
         [/\bclose bracket\b/g, ")"],
         [/\bopen parenthesis\b/g, "("],
         [/\bclose parenthesis\b/g, ")"]
     ];
 
-    replacements.forEach(([pattern, replacement]) => {
-        value = value.replace(pattern, replacement);
+    replacements.forEach(([pattern, value]) => {
+        s = s.replace(pattern, value);
     });
 
-    const numbers = {
-        zero: "0",
-        one: "1",
-        two: "2",
-        three: "3",
-        four: "4",
-        five: "5",
-        six: "6",
-        seven: "7",
-        eight: "8",
-        nine: "9",
-        ten: "10",
-        eleven: "11",
-        twelve: "12",
-        thirteen: "13",
-        fourteen: "14",
-        fifteen: "15",
-        sixteen: "16",
-        seventeen: "17",
-        eighteen: "18",
-        nineteen: "19",
-        twenty: "20",
-        thirty: "30",
-        forty: "40",
-        fifty: "50",
-        sixty: "60",
-        seventy: "70",
-        eighty: "80",
-        ninety: "90",
-        hundred: "100"
-    };
-
-    Object.keys(numbers).forEach(word => {
-        value = value.replace(
-            new RegExp("\\b" + word + "\\b", "g"),
-            numbers[word]
-        );
+    Object.entries(WORD_NUMBERS_EN).forEach(([word, number]) => {
+        const pattern = new RegExp("\\b" + word + "\\b", "g");
+        s = s.replace(pattern, String(number));
     });
 
-    return value;
+    Object.entries(WORD_NUMBERS_HI).forEach(([word, number]) => {
+        s = s.replaceAll(word, String(number));
+    });
+
+    return normalizeMath(s);
 }
 
 
 /* =========================================================
-   HINDI NUMBER WORDS
+   REMOVE QUESTION PREFIX
    ========================================================= */
 
-function normalizeHindiNumbers(text) {
+function cleanQuestionPrefix(input) {
 
-    let value = String(text || "");
+    let s = String(input || "").trim();
 
-    const numbers = {
-        "शून्य": "0",
-        "एक": "1",
-        "दो": "2",
-        "तीन": "3",
-        "चार": "4",
-        "पाँच": "5",
-        "पांच": "5",
-        "छह": "6",
-        "छः": "6",
-        "सात": "7",
-        "आठ": "8",
-        "नौ": "9",
-        "दस": "10",
-        "ग्यारह": "11",
-        "बारह": "12",
-        "तेरह": "13",
-        "चौदह": "14",
-        "पंद्रह": "15",
-        "सोलह": "16",
-        "सत्रह": "17",
-        "अठारह": "18",
-        "उन्नीस": "19",
-        "बीस": "20"
-    };
+    s = s.replace(
+        /^(please\s+)?(solve|calculate|find|evaluate|simplify|expand|answer)\s*(the\s+)?/i,
+        ""
+    );
 
-    Object.keys(numbers).forEach(word => {
-        value = value.replace(
-            new RegExp(word, "g"),
-            numbers[word]
-        );
-    });
+    s = s.replace(
+        /^the\s+(value|answer|solution)\s+(of|for)\s*/i,
+        ""
+    );
 
-    return value;
+    s = s.replace(
+        /^simplify\s+(the\s+)?expression\s*[:\-]?\s*/i,
+        ""
+    );
+
+    s = s.replace(
+        /^expand\s+(the\s+)?expression\s*[:\-]?\s*/i,
+        ""
+    );
+
+    s = s.replace(
+        /^evaluate\s*[:\-]?\s*/i,
+        ""
+    );
+
+    return s.trim();
 }
 
 
 /* =========================================================
-   TOKENIZER
+   TOKENIZER — ALGEBRA
    ========================================================= */
 
-function tokenize(expression) {
+function tokenizeAlgebra(input) {
+
+    let s = normalizeMath(input);
+
+    s = s.replace(/\bsqrt\s*\(/gi, "sqrt(");
 
     const tokens = [];
+
     let i = 0;
 
-    while (i < expression.length) {
+    while (i < s.length) {
 
-        const char = expression[i];
+        const ch = s[i];
 
-        if (/\s/.test(char)) {
+        if (/\s/.test(ch)) {
             i++;
             continue;
         }
 
-        if (/[0-9.]/.test(char)) {
+        /* Number */
+        if (/[0-9.]/.test(ch)) {
 
-            let number = "";
+            let start = i;
+            let dotCount = 0;
 
             while (
-                i < expression.length &&
-                /[0-9.]/.test(expression[i])
+                i < s.length &&
+                /[0-9.]/.test(s[i])
             ) {
-                number += expression[i];
+                if (s[i] === ".") {
+                    dotCount++;
+                }
+
                 i++;
             }
 
-            if ((number.match(/\./g) || []).length > 1) {
-                throw new Error("Invalid number");
+            const raw = s.slice(start, i);
+
+            if (
+                dotCount > 1 ||
+                raw === "."
+            ) {
+                throw new Error("Invalid number: " + raw);
             }
 
             tokens.push({
                 type: "number",
-                value: Number(number)
+                value: Number(raw)
             });
 
             continue;
         }
 
-        if ("+-*/^()".includes(char)) {
+        /* Variable */
+        if (/[a-zA-Z]/.test(ch)) {
+
+            let start = i;
+
+            while (
+                i < s.length &&
+                /[a-zA-Z]/.test(s[i])
+            ) {
+                i++;
+            }
+
+            const word = s.slice(start, i);
+
+            if (word.toLowerCase() === "pi") {
+
+                tokens.push({
+                    type: "number",
+                    value: Math.PI
+                });
+
+            } else {
+
+                tokens.push({
+                    type: "variable",
+                    value: word
+                });
+            }
+
+            continue;
+        }
+
+        /* Operators */
+        if ("+-*/^()".includes(ch)) {
 
             tokens.push({
-                type: char,
-                value: char
+                type: "operator",
+                value: ch
             });
 
             i++;
             continue;
         }
 
-        throw new Error("Unsupported symbol: " + char);
+        throw new Error(
+            "Unsupported symbol: " + ch
+        );
     }
 
-    return tokens;
+
+    /* =====================================================
+       CRITICAL FIX:
+       INSERT IMPLICIT MULTIPLICATION
+       
+       2x        -> 2*x
+       4(x+1)    -> 4*(x+1)
+       x(x+1)    -> x*(x+1)
+       (x+1)(x+2)-> (x+1)*(x+2)
+       2(x+1)    -> 2*(x+1)
+    ====================================================== */
+
+    const output = [];
+
+    function canEndValue(token) {
+
+        return token &&
+            (
+                token.type === "number" ||
+                token.type === "variable" ||
+                token.value === ")"
+            );
+    }
+
+    function canStartValue(token) {
+
+        return token &&
+            (
+                token.type === "number" ||
+                token.type === "variable" ||
+                token.value === "("
+            );
+    }
+
+    for (const token of tokens) {
+
+        const previous =
+            output[output.length - 1];
+
+        if (
+            canEndValue(previous) &&
+            canStartValue(token)
+        ) {
+
+            output.push({
+                type: "operator",
+                value: "*",
+                implicit: true
+            });
+        }
+
+        output.push(token);
+    }
+
+    return output;
 }
 
 
 /* =========================================================
-   DETAILED NUMERIC PARSER
+   POLYNOMIAL UTILITIES
    ========================================================= */
 
-class DetailedParser {
+/*
+ Polynomial format:
+
+ {
+    0: constant,
+    1: x,
+    2: x²,
+    3: x³
+ }
+*/
+
+function polyClean(p) {
+
+    const result = {};
+
+    Object.keys(p).forEach(power => {
+
+        const value = cleanNumber(p[power]);
+
+        if (Math.abs(value) > 1e-12) {
+            result[power] = value;
+        }
+
+    });
+
+    return result;
+}
+
+function polyAdd(a, b) {
+
+    const result = {
+        ...a
+    };
+
+    Object.keys(b).forEach(power => {
+
+        result[power] =
+            (result[power] || 0) +
+            b[power];
+
+    });
+
+    return polyClean(result);
+}
+
+function polySubtract(a, b) {
+
+    const result = {
+        ...a
+    };
+
+    Object.keys(b).forEach(power => {
+
+        result[power] =
+            (result[power] || 0) -
+            b[power];
+
+    });
+
+    return polyClean(result);
+}
+
+function polyMultiply(a, b) {
+
+    const result = {};
+
+    Object.entries(a).forEach(([pa, ca]) => {
+
+        Object.entries(b).forEach(([pb, cb]) => {
+
+            const power =
+                Number(pa) + Number(pb);
+
+            result[power] =
+                (result[power] || 0) +
+                ca * cb;
+        });
+
+    });
+
+    return polyClean(result);
+}
+
+function polyScale(a, factor) {
+
+    const result = {};
+
+    Object.entries(a).forEach(([power, coefficient]) => {
+
+        result[power] =
+            coefficient * factor;
+
+    });
+
+    return polyClean(result);
+}
+
+function polyPower(base, exponent) {
+
+    exponent = Number(exponent);
+
+    if (!Number.isInteger(exponent) || exponent < 0) {
+        throw new Error(
+            "Polynomial powers must be non-negative integers."
+        );
+    }
+
+    let result = { 0: 1 };
+
+    for (let i = 0; i < exponent; i++) {
+        result = polyMultiply(result, base);
+    }
+
+    return result;
+}
+
+
+/* =========================================================
+   POLYNOMIAL FORMATTER
+   ========================================================= */
+
+function formatPolynomial(poly, variable = "x") {
+
+    poly = polyClean(poly);
+
+    const powers = Object.keys(poly)
+        .map(Number)
+        .sort((a, b) => b - a);
+
+    if (powers.length === 0) {
+        return "0";
+    }
+
+    let output = "";
+
+    powers.forEach((power, index) => {
+
+        const coefficient =
+            cleanNumber(poly[power]);
+
+        if (coefficient === 0) {
+            return;
+        }
+
+        const absolute =
+            Math.abs(coefficient);
+
+        let term = "";
+
+        if (power === 0) {
+
+            term = formatNumber(absolute);
+
+        } else {
+
+            if (absolute === 1) {
+                term = "";
+            } else {
+                term = formatNumber(absolute);
+            }
+
+            if (power === 1) {
+
+                term += variable;
+
+            } else {
+
+                term +=
+                    variable +
+                    "^" +
+                    power;
+            }
+        }
+
+        if (index === 0) {
+
+            if (coefficient < 0) {
+                output += "-";
+            }
+
+            output += term;
+
+        } else {
+
+            if (coefficient < 0) {
+                output += " - ";
+            } else {
+                output += " + ";
+            }
+
+            output += term;
+        }
+
+    });
+
+    return output || "0";
+}
+
+
+/* =========================================================
+   ALGEBRA PARSER
+   ========================================================= */
+
+class AlgebraParser {
 
     constructor(tokens) {
+
         this.tokens = tokens;
-        this.index = 0;
-        this.steps = [];
+        this.position = 0;
+
+        this.variableName = null;
     }
 
     current() {
-        return this.tokens[this.index];
+        return this.tokens[this.position];
     }
 
-    eat(type) {
-        if (this.current() && this.current().type === type) {
-            return this.tokens[this.index++];
+    consume(value) {
+
+        const token = this.current();
+
+        if (
+            token &&
+            token.value === value
+        ) {
+            this.position++;
+            return true;
         }
 
-        return null;
+        return false;
     }
 
     parse() {
 
         const result = this.parseExpression();
 
-        if (this.index < this.tokens.length) {
-            throw new Error("Unexpected token");
+        if (this.position < this.tokens.length) {
+
+            throw new Error(
+                "Unexpected token: " +
+                this.current().value
+            );
         }
 
         return result;
@@ -464,627 +872,147 @@ class DetailedParser {
 
     parseExpression() {
 
-        let value = this.parseTerm();
+        let result =
+            this.parseTerm();
 
-        while (
-            this.current() &&
-            (
-                this.current().type === "+" ||
-                this.current().type === "-"
-            )
-        ) {
+        while (true) {
 
-            const operator = this.current().type;
+            if (this.consume("+")) {
 
-            this.index++;
+                result =
+                    polyAdd(
+                        result,
+                        this.parseTerm()
+                    );
 
-            const right = this.parseTerm();
-            const left = value;
-
-            value =
-                operator === "+"
-                    ? left + right
-                    : left - right;
-
-            this.steps.push({
-                type: operator === "+" ? "addition" : "subtraction",
-                left,
-                right,
-                result: value
-            });
-        }
-
-        return value;
-    }
-
-    parseTerm() {
-
-        let value = this.parsePower();
-
-        while (
-            this.current() &&
-            (
-                this.current().type === "*" ||
-                this.current().type === "/"
-            )
-        ) {
-
-            const operator = this.current().type;
-
-            this.index++;
-
-            const right = this.parsePower();
-            const left = value;
-
-            if (operator === "/" && right === 0) {
-                throw new Error("Division by zero");
+                continue;
             }
 
-            value =
-                operator === "*"
-                    ? left * right
-                    : left / right;
+            if (this.consume("-")) {
 
-            this.steps.push({
-                type: operator === "*" ? "multiplication" : "division",
-                left,
-                right,
-                result: value
-            });
-        }
+                result =
+                    polySubtract(
+                        result,
+                        this.parseTerm()
+                    );
 
-        return value;
-    }
-
-    parsePower() {
-
-        let value = this.parseUnary();
-
-        if (
-            this.current() &&
-            this.current().type === "^"
-        ) {
-
-            this.index++;
-
-            const right = this.parsePower();
-            const left = value;
-
-            value = Math.pow(left, right);
-
-            this.steps.push({
-                type: "power",
-                left,
-                right,
-                result: value
-            });
-        }
-
-        return value;
-    }
-
-    parseUnary() {
-
-        if (this.eat("+")) {
-            return this.parseUnary();
-        }
-
-        if (this.eat("-")) {
-            const value = this.parseUnary();
-            return -value;
-        }
-
-        return this.parsePrimary();
-    }
-
-    parsePrimary() {
-
-        const token = this.current();
-
-        if (!token) {
-            throw new Error("Incomplete expression");
-        }
-
-        if (token.type === "number") {
-            this.index++;
-            return token.value;
-        }
-
-        if (token.type === "(") {
-
-            this.index++;
-
-            const value = this.parseExpression();
-
-            if (!this.eat(")")) {
-                throw new Error("Missing closing bracket");
+                continue;
             }
 
-            return value;
-        }
-
-        throw new Error("Expected number");
-    }
-}
-
-
-/* =========================================================
-   NUMERIC EXPRESSION SOLVER
-   ========================================================= */
-
-function solveNumericExpression(expression) {
-
-    const tokens = tokenize(expression);
-
-    const parser = new DetailedParser(tokens);
-
-    const value = parser.parse();
-
-    return {
-        value,
-        steps: parser.steps
-    };
-}
-
-
-/* =========================================================
-   SIGN EXPLANATION
-   ========================================================= */
-
-function signExplanation(operator, left, right) {
-
-    if (
-        (operator === "*" || operator === "/") &&
-        left < 0 &&
-        right < 0
-    ) {
-        return currentLanguage === "hi"
-            ? "ऋणात्मक ÷/× ऋणात्मक = धनात्मक"
-            : "Negative ÷/× negative = positive";
-    }
-
-    if (
-        (operator === "*" || operator === "/") &&
-        left < 0 &&
-        right > 0
-    ) {
-        return currentLanguage === "hi"
-            ? "ऋणात्मक ÷/× धनात्मक = ऋणात्मक"
-            : "Negative ÷/× positive = negative";
-    }
-
-    if (
-        (operator === "*" || operator === "/") &&
-        left > 0 &&
-        right < 0
-    ) {
-        return currentLanguage === "hi"
-            ? "धनात्मक ÷/× ऋणात्मक = ऋणात्मक"
-            : "Positive ÷/× negative = negative";
-    }
-
-    return "";
-}
-
-
-/* =========================================================
-   NUMERIC STEPS
-   ========================================================= */
-
-function buildNumericSteps(expression, result) {
-
-    const steps = [];
-
-    if (currentLanguage === "hi") {
-
-        steps.push(
-            "BODMAS / Order of Operations का पालन करें।"
-        );
-
-    } else {
-
-        steps.push(
-            "Apply BODMAS / Order of Operations."
-        );
-    }
-
-    result.steps.forEach(operation => {
-
-        let symbol = "+";
-
-        if (operation.type === "subtraction") symbol = "−";
-        if (operation.type === "multiplication") symbol = "×";
-        if (operation.type === "division") symbol = "÷";
-        if (operation.type === "power") symbol = "^";
-
-        const left = formatNumber(operation.left);
-        const right = formatNumber(operation.right);
-        const answer = formatNumber(operation.result);
-
-        steps.push(
-            `${left} ${symbol} ${right} = ${answer}`
-        );
-
-        const explanation = signExplanation(
-            symbol === "×" ? "*" :
-            symbol === "÷" ? "/" :
-            symbol,
-            operation.left,
-            operation.right
-        );
-
-        if (explanation) {
-            steps.push(explanation);
-        }
-    });
-
-    steps.push(
-        currentLanguage === "hi"
-            ? `अंतिम उत्तर = ${formatNumber(result.value)}`
-            : `Final Answer = ${formatNumber(result.value)}`
-    );
-
-    return steps;
-}
-
-
-/* =========================================================
-   VARIABLE DETECTION
-   ========================================================= */
-
-function hasVariable(text) {
-    return /[a-zA-Z]/.test(text);
-}
-
-
-/* =========================================================
-   ALGEBRA TOKENIZER
-   ========================================================= */
-
-function algebraTokens(expression) {
-
-    const text = expression
-        .replace(/\s+/g, "")
-        .replace(/−/g, "-")
-        .replace(/×/g, "*")
-        .replace(/·/g, "*")
-        .replace(/÷/g, "/");
-
-    const tokens = [];
-    let i = 0;
-
-    while (i < text.length) {
-
-        const char = text[i];
-
-        if (/[0-9.]/.test(char)) {
-
-            let value = "";
-
-            while (
-                i < text.length &&
-                /[0-9.]/.test(text[i])
-            ) {
-                value += text[i++];
-            }
-
-            tokens.push({
-                type: "number",
-                value: Number(value)
-            });
-
-            continue;
-        }
-
-        if (/[a-zA-Z]/.test(char)) {
-
-            let variable = "";
-
-            while (
-                i < text.length &&
-                /[a-zA-Z]/.test(text[i])
-            ) {
-                variable += text[i++];
-            }
-
-            tokens.push({
-                type: "variable",
-                value: variable
-            });
-
-            continue;
-        }
-
-        if ("+-*/^()".includes(char)) {
-
-            tokens.push({
-                type: char,
-                value: char
-            });
-
-            i++;
-            continue;
-        }
-
-        throw new Error("Unsupported algebra symbol");
-    }
-
-    return tokens;
-}
-
-
-/* =========================================================
-   ALGEBRA POLYNOMIAL ENGINE
-   ========================================================= */
-
-function addPolynomial(a, b) {
-
-    const result = {};
-
-    Object.keys(a).forEach(power => {
-        result[power] = (result[power] || 0) + a[power];
-    });
-
-    Object.keys(b).forEach(power => {
-        result[power] = (result[power] || 0) + b[power];
-    });
-
-    return cleanPolynomial(result);
-}
-
-
-function subtractPolynomial(a, b) {
-
-    const result = {};
-
-    Object.keys(a).forEach(power => {
-        result[power] = (result[power] || 0) + a[power];
-    });
-
-    Object.keys(b).forEach(power => {
-        result[power] = (result[power] || 0) - b[power];
-    });
-
-    return cleanPolynomial(result);
-}
-
-
-function multiplyPolynomial(a, b) {
-
-    const result = {};
-
-    Object.keys(a).forEach(p1 => {
-
-        Object.keys(b).forEach(p2 => {
-
-            const power = Number(p1) + Number(p2);
-
-            result[power] =
-                (result[power] || 0) +
-                a[p1] * b[p2];
-        });
-    });
-
-    return cleanPolynomial(result);
-}
-
-
-function scalePolynomial(poly, factor) {
-
-    const result = {};
-
-    Object.keys(poly).forEach(power => {
-        result[power] = poly[power] * factor;
-    });
-
-    return cleanPolynomial(result);
-}
-
-
-function cleanPolynomial(poly) {
-
-    const result = {};
-
-    Object.keys(poly).forEach(power => {
-
-        const value = poly[power];
-
-        if (Math.abs(value) > 1e-12) {
-            result[power] = value;
-        }
-    });
-
-    return result;
-}
-
-
-function constantPolynomial(value) {
-    return value === 0 ? {} : { 0: value };
-}
-
-
-function variablePolynomial() {
-    return { 1: 1 };
-}
-
-
-/* =========================================================
-   POLYNOMIAL PARSER
-   ========================================================= */
-
-class PolynomialParser {
-
-    constructor(tokens) {
-        this.tokens = tokens;
-        this.index = 0;
-    }
-
-    current() {
-        return this.tokens[this.index];
-    }
-
-    eat(type) {
-
-        if (
-            this.current() &&
-            this.current().type === type
-        ) {
-            return this.tokens[this.index++];
-        }
-
-        return null;
-    }
-
-    parse() {
-
-        let result = this.parseExpression();
-
-        if (this.index < this.tokens.length) {
-            throw new Error("Unexpected algebra token");
+            break;
         }
 
         return result;
     }
 
-    parseExpression() {
-
-        let value = this.parseTerm();
-
-        while (
-            this.current() &&
-            (
-                this.current().type === "+" ||
-                this.current().type === "-"
-            )
-        ) {
-
-            const operator = this.current().type;
-
-            this.index++;
-
-            const right = this.parseTerm();
-
-            value =
-                operator === "+"
-                    ? addPolynomial(value, right)
-                    : subtractPolynomial(value, right);
-        }
-
-        return value;
-    }
-
     parseTerm() {
 
-        let value = this.parsePower();
+        let result =
+            this.parsePower();
 
-        while (
-            this.current() &&
-            (
-                this.current().type === "*" ||
-                this.current().type === "/"
-            )
-        ) {
+        while (true) {
 
-            const operator = this.current().type;
+            if (this.consume("*")) {
 
-            this.index++;
+                result =
+                    polyMultiply(
+                        result,
+                        this.parsePower()
+                    );
 
-            const right = this.parsePower();
+                continue;
+            }
 
-            if (operator === "*") {
+            if (this.consume("/")) {
 
-                value = multiplyPolynomial(
-                    value,
-                    right
-                );
+                const denominator =
+                    this.parsePower();
 
-            } else {
+                const denominatorPowers =
+                    Object.keys(denominator);
+
+                /*
+                 Only division by a constant
+                 is allowed in this polynomial engine.
+                */
 
                 if (
-                    Object.keys(right).some(
-                        power => Number(power) !== 0
-                    )
+                    denominatorPowers.length !== 1 ||
+                    Number(denominatorPowers[0]) !== 0
                 ) {
                     throw new Error(
-                        "Variable denominator not supported"
+                        "Division by a variable expression is not supported."
                     );
                 }
 
-                const constant = right[0] || 0;
+                const divisor =
+                    denominator[0];
 
-                if (constant === 0) {
-                    throw new Error("Division by zero");
+                if (divisor === 0) {
+                    throw new Error(
+                        "Division by zero is not allowed."
+                    );
                 }
 
-                value = scalePolynomial(
-                    value,
-                    1 / constant
-                );
+                result =
+                    polyScale(
+                        result,
+                        1 / divisor
+                    );
+
+                continue;
             }
+
+            break;
         }
 
-        return value;
+        return result;
     }
 
     parsePower() {
 
-        let value = this.parseUnary();
+        let base =
+            this.parseUnary();
 
-        if (
-            this.current() &&
-            this.current().type === "^"
-        ) {
+        if (this.consume("^")) {
 
-            this.index++;
+            const exponentPoly =
+                this.parsePower();
 
-            const exponentToken = this.current();
-
-            if (
-                !exponentToken ||
-                exponentToken.type !== "number"
-            ) {
-                throw new Error(
-                    "Power must be numeric"
-                );
-            }
-
-            const exponent = exponentToken.value;
-
-            this.index++;
+            const powers =
+                Object.keys(exponentPoly);
 
             if (
-                !Number.isInteger(exponent) ||
-                exponent < 0 ||
-                exponent > 10
+                powers.length !== 1 ||
+                Number(powers[0]) !== 0
             ) {
                 throw new Error(
-                    "Unsupported power"
+                    "Exponent must be a constant."
                 );
             }
 
-            let result = constantPolynomial(1);
+            const exponent =
+                exponentPoly[0];
 
-            for (let i = 0; i < exponent; i++) {
-                result = multiplyPolynomial(
-                    result,
-                    value
+            base =
+                polyPower(
+                    base,
+                    exponent
                 );
-            }
-
-            value = result;
         }
 
-        return value;
+        return base;
     }
 
     parseUnary() {
 
-        if (this.eat("+")) {
+        if (this.consume("+")) {
             return this.parseUnary();
         }
 
-        if (this.eat("-")) {
-            return scalePolynomial(
+        if (this.consume("-")) {
+
+            return polyScale(
                 this.parseUnary(),
                 -1
             );
@@ -1098,35 +1026,53 @@ class PolynomialParser {
         const token = this.current();
 
         if (!token) {
-            throw new Error("Incomplete algebra");
+            throw new Error(
+                "Unexpected end of expression."
+            );
         }
 
         if (token.type === "number") {
 
-            this.index++;
+            this.position++;
 
-            return constantPolynomial(
-                token.value
-            );
+            return {
+                0: token.value
+            };
         }
 
         if (token.type === "variable") {
 
-            this.index++;
+            this.position++;
 
-            return variablePolynomial();
+            const variable =
+                token.value;
+
+            if (this.variableName === null) {
+                this.variableName = variable;
+            }
+
+            if (
+                this.variableName !== variable
+            ) {
+                throw new Error(
+                    "Please use one variable at a time."
+                );
+            }
+
+            return {
+                1: 1
+            };
         }
 
-        if (token.type === "(") {
-
-            this.index++;
+        if (this.consume("(")) {
 
             const result =
                 this.parseExpression();
 
-            if (!this.eat(")")) {
+            if (!this.consume(")")) {
+
                 throw new Error(
-                    "Missing closing bracket"
+                    "Missing closing bracket."
                 );
             }
 
@@ -1134,299 +1080,119 @@ class PolynomialParser {
         }
 
         throw new Error(
-            "Invalid algebra expression"
+            "Unexpected token: " +
+            token.value
         );
     }
 }
 
 
 /* =========================================================
-   POLYNOMIAL FORMATTER
+   PARSE POLYNOMIAL
    ========================================================= */
 
-function polynomialToString(poly) {
+function parsePolynomial(expression) {
 
-    const powers = Object.keys(poly)
-        .map(Number)
-        .sort((a, b) => b - a);
+    const tokens =
+        tokenizeAlgebra(expression);
 
-    if (powers.length === 0) {
-        return "0";
-    }
+    const parser =
+        new AlgebraParser(tokens);
 
-    let output = "";
-
-    powers.forEach(power => {
-
-        let coefficient = poly[power];
-
-        if (Math.abs(coefficient) < 1e-12) {
-            return;
-        }
-
-        const negative = coefficient < 0;
-        coefficient = Math.abs(coefficient);
-
-        let term = "";
-
-        if (power === 0) {
-
-            term = formatNumber(coefficient);
-
-        } else {
-
-            if (Math.abs(coefficient - 1) > 1e-12) {
-                term += formatNumber(coefficient);
-            }
-
-            term += "x";
-
-            if (power !== 1) {
-                term += "^" + power;
-            }
-        }
-
-        if (!output) {
-
-            output =
-                negative
-                    ? "-" + term
-                    : term;
-
-        } else {
-
-            output +=
-                negative
-                    ? " - " + term
-                    : " + " + term;
-        }
-    });
-
-    return output;
-}
-
-
-/* =========================================================
-   EXPAND / SIMPLIFY ALGEBRA
-   ========================================================= */
-
-function solveAlgebraSimplification(original) {
-
-    let expression = normalizeMath(original);
-
-    expression = expression
-        .replace(/^simplify\s+(the\s+)?expression\s*:/i, "")
-        .replace(/^simplify\s*:/i, "")
-        .replace(/^expand\s*:/i, "")
-        .trim();
-
-    if (!/[a-zA-Z]/.test(expression)) {
-        return null;
-    }
-
-    const tokens = algebraTokens(expression);
-
-    const parser = new PolynomialParser(tokens);
-
-    const polynomial = parser.parse();
-
-    const answer = polynomialToString(polynomial);
-
-    const steps = [];
-
-    if (currentLanguage === "hi") {
-
-        steps.push(
-            `दिया गया expression: ${original}`
-        );
-
-        steps.push(
-            "Brackets को expand करके समान terms को combine करें।"
-        );
-
-    } else {
-
-        steps.push(
-            `Given expression: ${original}`
-        );
-
-        steps.push(
-            "Expand the brackets and combine like terms."
-        );
-    }
-
-    /*
-       Special detailed explanation for:
-       4(2x - 3) - 2(x + 5)
-    */
-
-    const compact = expression.replace(/\s+/g, "");
-
-    const specialPattern =
-        /^([+-]?\d+(?:\.\d+)?)\(([-+]?\d*\.?\d*)x([-+]\d+(?:\.\d+)?)\)([-+])(\d+(?:\.\d+)?)\((x[-+]\d+(?:\.\d+)?)\)$/;
-
-    if (specialPattern.test(compact)) {
-
-        /*
-           We still calculate the general polynomial.
-           Detailed generic distribution is produced below.
-        */
-    }
-
-    const distributionSteps =
-        explainDistribution(expression);
-
-    distributionSteps.forEach(step => {
-        steps.push(step);
-    });
-
-    steps.push(
-        currentLanguage === "hi"
-            ? `Like terms combine करने के बाद: ${answer}`
-            : `Combine like terms: ${answer}`
-    );
-
-    steps.push(
-        currentLanguage === "hi"
-            ? `अंतिम उत्तर = ${answer}`
-            : `Final Answer = ${answer}`
-    );
+    const polynomial =
+        parser.parse();
 
     return {
-        answer,
-        steps
+        polynomial,
+        variable: parser.variableName || "x"
     };
 }
 
 
 /* =========================================================
-   DISTRIBUTION EXPLANATION
+   EXPLANATION HELPERS
    ========================================================= */
+
+function findMatchingBracket(text, start) {
+
+    let depth = 0;
+
+    for (
+        let i = start;
+        i < text.length;
+        i++
+    ) {
+
+        if (text[i] === "(") {
+            depth++;
+        }
+
+        if (text[i] === ")") {
+
+            depth--;
+
+            if (depth === 0) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
 
 function explainDistribution(expression) {
 
     const steps = [];
 
-    /*
-       Find terms such as:
-       4(2x-3)
-       -2(x+5)
-       3(x+4)
-       etc.
-    */
+    let s = expression
+        .replace(/\s+/g, " ")
+        .trim();
 
-    const pattern =
-        /([+-]?\d+(?:\.\d+)?)\s*\(\s*([^()]+)\s*\)/g;
+    /*
+     Find coefficient before bracket:
+
+     4(2x-3)
+     -2(x+5)
+     */
+
+    const regex =
+        /(^|[+\-])\s*(\d+(?:\.\d+)?)\s*\(/g;
 
     let match;
 
-    while ((match = pattern.exec(expression)) !== null) {
+    while ((match = regex.exec(s)) !== null) {
 
-        const coefficient = Number(match[1]);
-        const inside = match[2];
+        const sign =
+            match[1] === "-"
+                ? -1
+                : 1;
 
-        const insideMatch =
-            /^([+-]?\d*\.?\d*)\s*x\s*([+-]\s*\d+(?:\.\d+)?)$/i
-                .exec(inside);
+        const coefficient =
+            sign * Number(match[2]);
 
-        if (insideMatch) {
+        const openIndex =
+            regex.lastIndex - 1;
 
-            let xCoefficient = insideMatch[1];
-
-            if (
-                xCoefficient === "" ||
-                xCoefficient === "+"
-            ) {
-                xCoefficient = 1;
-            } else if (xCoefficient === "-") {
-                xCoefficient = -1;
-            } else {
-                xCoefficient = Number(xCoefficient);
-            }
-
-            const constant =
-                Number(
-                    insideMatch[2]
-                        .replace(/\s+/g, "")
-                );
-
-            const first =
-                coefficient * xCoefficient;
-
-            const second =
-                coefficient * constant;
-
-            const firstText =
-                formatCoefficientX(first);
-
-            const secondText =
-                formatSignedConstant(second);
-
-            steps.push(
-                `${formatNumber(coefficient)}(${formatAlgebraInside(
-                    xCoefficient,
-                    constant
-                )}) = ${firstText}${secondText}`
+        const closeIndex =
+            findMatchingBracket(
+                s,
+                openIndex
             );
 
-        } else {
-
-            /*
-               Generic distribution for expressions like:
-               3(x+4)
-            */
-
-            const parts =
-                splitTopLevelPlusMinus(inside);
-
-            if (parts.length > 1) {
-
-                const distributed = parts.map(part => {
-
-                    const value = part.trim();
-
-                    const numeric =
-                        value.match(
-                            /^([+-]?)(\d*\.?\d*)x$/i
-                        );
-
-                    if (numeric) {
-
-                        let c =
-                            numeric[2]
-                                ? Number(numeric[2])
-                                : 1;
-
-                        if (numeric[1] === "-") {
-                            c = -c;
-                        }
-
-                        return formatCoefficientX(
-                            coefficient * c
-                        );
-                    }
-
-                    const number =
-                        Number(value);
-
-                    if (Number.isFinite(number)) {
-                        return formatNumber(
-                            coefficient * number
-                        );
-                    }
-
-                    return null;
-
-                }).filter(Boolean);
-
-                if (distributed.length) {
-
-                    steps.push(
-                        `${formatNumber(coefficient)}(${inside}) = ${distributed.join(" + ")}`
-                    );
-                }
-            }
+        if (closeIndex === -1) {
+            continue;
         }
+
+        const inside =
+            s.slice(
+                openIndex + 1,
+                closeIndex
+            );
+
+        steps.push({
+            coefficient,
+            inside
+        });
     }
 
     return steps;
@@ -1434,79 +1200,231 @@ function explainDistribution(expression) {
 
 
 /* =========================================================
-   ALGEBRA FORMATTING HELPERS
+   FORMAT POLYNOMIAL FOR DISPLAY
    ========================================================= */
 
-function formatCoefficientX(value) {
+function displayPolynomial(poly, variable) {
 
-    if (Math.abs(value) < 1e-12) {
-        return "";
-    }
-
-    if (Math.abs(value - 1) < 1e-12) {
-        return "x";
-    }
-
-    if (Math.abs(value + 1) < 1e-12) {
-        return "-x";
-    }
-
-    return `${formatNumber(value)}x`;
+    return formatPolynomial(
+        poly,
+        variable || "x"
+    );
 }
 
 
-function formatSignedConstant(value) {
+/* =========================================================
+   SOLVE ALGEBRA SIMPLIFICATION
+   ========================================================= */
 
-    if (value >= 0) {
-        return ` + ${formatNumber(value)}`;
+function solveAlgebraSimplification(input) {
+
+    let expression =
+        cleanQuestionPrefix(input);
+
+    expression =
+        expression
+            .replace(
+                /^simplify\s*:\s*/i,
+                ""
+            )
+            .replace(
+                /^expand\s*:\s*/i,
+                ""
+            )
+            .trim();
+
+    if (!expression) {
+        throw new Error("Empty algebra expression.");
     }
 
-    return ` - ${formatNumber(Math.abs(value))}`;
+    /*
+     Convert unicode powers before parsing.
+    */
+
+    expression =
+        normalizeMath(expression);
+
+    const parsed =
+        parsePolynomial(expression);
+
+    const poly =
+        parsed.polynomial;
+
+    const variable =
+        parsed.variable;
+
+    const finalExpression =
+        displayPolynomial(
+            poly,
+            variable
+        );
+
+    const steps = [];
+
+    steps.push(
+        "Start with the expression:"
+    );
+
+    steps.push(
+        `<div class="math-step-expression">${escapeHTML(expression)}</div>`
+    );
+
+    /*
+     Detailed distribution
+    */
+
+    const distributions =
+        explainDistribution(expression);
+
+    if (distributions.length > 0) {
+
+        steps.push(
+            "<strong>Step 1: Expand the brackets using the distributive property.</strong>"
+        );
+
+        distributions.forEach(item => {
+
+            const c =
+                item.coefficient;
+
+            const inside =
+                item.inside;
+
+            const terms =
+                splitTerms(inside);
+
+            if (terms.length > 0) {
+
+                const expanded =
+                    terms.map(term => {
+
+                        const cleaned =
+                            term.trim();
+
+                        return (
+                            formatNumber(c) +
+                            " × (" +
+                            cleaned +
+                            ")"
+                        );
+
+                    });
+
+                steps.push(
+                    `<div class="math-step-expression">${escapeHTML(expanded.join(" + "))}</div>`
+                );
+
+                terms.forEach(term => {
+
+                    steps.push(
+                        `<div class="math-step-expression">${escapeHTML(
+                            formatNumber(c) +
+                            " × (" +
+                            term.trim() +
+                            ")"
+                        )}</div>`
+                    );
+                });
+            }
+
+        });
+
+        steps.push(
+            "<strong>Step 2: Multiply the coefficient by each term inside the brackets.</strong>"
+        );
+
+    } else {
+
+        steps.push(
+            "<strong>Step 1: Parse the algebraic expression.</strong>"
+        );
+    }
+
+    /*
+     Show polynomial terms
+    */
+
+    const powers =
+        Object.keys(poly)
+            .map(Number)
+            .sort((a, b) => b - a);
+
+    if (powers.length > 1) {
+
+        steps.push(
+            "<strong>Step 3: Combine like terms.</strong>"
+        );
+
+        steps.push(
+            `<div class="math-step-expression">${escapeHTML(finalExpression)}</div>`
+        );
+
+    } else {
+
+        steps.push(
+            "<strong>Step 2: Simplify the resulting terms.</strong>"
+        );
+
+        steps.push(
+            `<div class="math-step-expression">${escapeHTML(finalExpression)}</div>`
+        );
+    }
+
+    steps.push(
+        `<strong>Final Answer:</strong> <span class="final-math-answer">${escapeHTML(finalExpression)}</span>`
+    );
+
+    return {
+        answer: finalExpression,
+        steps
+    };
 }
 
 
-function formatAlgebraInside(xCoefficient, constant) {
+/* =========================================================
+   SPLIT ALGEBRA TERMS
+   ========================================================= */
 
-    const xPart =
-        formatCoefficientX(xCoefficient);
+function splitTerms(expression) {
 
-    const cPart =
-        constant >= 0
-            ? ` + ${formatNumber(constant)}`
-            : ` - ${formatNumber(Math.abs(constant))}`;
+    const result = [];
 
-    return `${xPart}${cPart}`;
-}
-
-
-function splitTopLevelPlusMinus(text) {
-
-    const parts = [];
     let current = "";
+    let depth = 0;
 
-    for (let i = 0; i < text.length; i++) {
+    for (let i = 0; i < expression.length; i++) {
 
-        const char = text[i];
+        const ch = expression[i];
+
+        if (ch === "(") {
+            depth++;
+        }
+
+        if (ch === ")") {
+            depth--;
+        }
 
         if (
-            (char === "+" || char === "-") &&
-            i > 0
+            depth === 0 &&
+            (ch === "+" || ch === "-") &&
+            current.trim()
         ) {
 
-            parts.push(current);
-            current = char;
+            result.push(current.trim());
+
+            current = ch;
 
         } else {
 
-            current += char;
+            current += ch;
         }
     }
 
-    if (current) {
-        parts.push(current);
+    if (current.trim()) {
+        result.push(current.trim());
     }
 
-    return parts;
+    return result;
 }
 
 
@@ -1514,101 +1432,130 @@ function splitTopLevelPlusMinus(text) {
    LINEAR EQUATION
    ========================================================= */
 
-function solveLinearEquation(text) {
+function solveLinearEquation(input) {
 
-    let equation = normalizeMath(text)
-        .replace(/^solve\s*:\s*/i, "")
-        .replace(/^solve\s+equation\s*:\s*/i, "")
-        .trim();
+    let equation =
+        cleanQuestionPrefix(input);
 
-    if (!equation.includes("=")) {
-        return null;
+    equation =
+        equation
+            .replace(
+                /^solve\s*:\s*/i,
+                ""
+            )
+            .trim();
+
+    const equalIndex =
+        equation.indexOf("=");
+
+    if (equalIndex === -1) {
+        throw new Error(
+            "Equation must contain =."
+        );
     }
 
-    if (!/[a-zA-Z]/.test(equation)) {
-        return null;
-    }
+    const left =
+        equation.slice(
+            0,
+            equalIndex
+        );
 
-    /*
-       Parse both sides as polynomial.
-    */
+    const right =
+        equation.slice(
+            equalIndex + 1
+        );
 
-    try {
+    const L =
+        parsePolynomial(left);
 
-        const parts = equation.split("=");
+    const R =
+        parsePolynomial(right);
 
-        if (parts.length !== 2) {
-            return null;
+    const variable =
+        L.variable !== "x"
+            ? L.variable
+            : R.variable;
+
+    const difference =
+        polySubtract(
+            L.polynomial,
+            R.polynomial
+        );
+
+    const a =
+        difference[1] || 0;
+
+    const b =
+        difference[0] || 0;
+
+    if (Math.abs(a) < 1e-12) {
+
+        if (Math.abs(b) < 1e-12) {
+
+            return {
+                answer: "All real numbers",
+                steps: [
+                    "Move all terms to one side.",
+                    "The equation simplifies to 0 = 0.",
+                    "<strong>Final Answer:</strong> All real numbers."
+                ]
+            };
+
         }
-
-        const leftParser =
-            new PolynomialParser(
-                algebraTokens(parts[0])
-            );
-
-        const rightParser =
-            new PolynomialParser(
-                algebraTokens(parts[1])
-            );
-
-        const left =
-            leftParser.parse();
-
-        const right =
-            rightParser.parse();
-
-        const combined =
-            subtractPolynomial(left, right);
-
-        const a = combined[1] || 0;
-        const b = combined[0] || 0;
-
-        if (Math.abs(a) < 1e-12) {
-            return null;
-        }
-
-        const x = -b / a;
-
-        const steps = [];
-
-        steps.push(
-            currentLanguage === "hi"
-                ? `Equation: ${equation}`
-                : `Equation: ${equation}`
-        );
-
-        steps.push(
-            currentLanguage === "hi"
-                ? `x वाले terms को एक तरफ और constants को दूसरी तरफ रखें।`
-                : `Collect the x terms and constants.`
-        );
-
-        steps.push(
-            `${formatNumber(a)}x ${b >= 0 ? "+" : "-"} ${formatNumber(Math.abs(b))} = 0`
-        );
-
-        steps.push(
-            `${formatNumber(a)}x = ${formatNumber(-b)}`
-        );
-
-        steps.push(
-            `x = ${formatNumber(x)}`
-        );
-
-        steps.push(
-            currentLanguage === "hi"
-                ? `अंतिम उत्तर: x = ${formatNumber(x)}`
-                : `Final Answer: x = ${formatNumber(x)}`
-        );
 
         return {
-            answer: `x = ${formatNumber(x)}`,
-            steps
+            answer: "No solution",
+            steps: [
+                "Move all terms to one side.",
+                `The equation becomes ${escapeHTML(formatNumber(b))} = 0.`,
+                "<strong>Final Answer:</strong> No solution."
+            ]
         };
-
-    } catch (error) {
-        return null;
     }
+
+    const x =
+        -b / a;
+
+    const steps = [];
+
+    steps.push(
+        `<strong>Step 1:</strong> Start with ${escapeHTML(equation)}`
+    );
+
+    steps.push(
+        "<strong>Step 2:</strong> Move all terms to the left side."
+    );
+
+    steps.push(
+        `<div class="math-step-expression">${escapeHTML(
+            formatPolynomial(difference, variable)
+        )} = 0</div>`
+    );
+
+    steps.push(
+        "<strong>Step 3:</strong> Isolate the variable."
+    );
+
+    steps.push(
+        `<div class="math-step-expression">${formatNumber(a)}${escapeHTML(variable)} = ${formatNumber(-b)}</div>`
+    );
+
+    steps.push(
+        "<strong>Step 4:</strong> Divide both sides by the coefficient of the variable."
+    );
+
+    steps.push(
+        `<div class="math-step-expression">${escapeHTML(variable)} = ${formatNumber(x)}</div>`
+    );
+
+    steps.push(
+        `<strong>Final Answer:</strong> ${escapeHTML(variable)} = ${formatNumber(x)}`
+    );
+
+    return {
+        answer: `${variable} = ${formatNumber(x)}`,
+        steps
+    };
 }
 
 
@@ -1616,78 +1563,99 @@ function solveLinearEquation(text) {
    QUADRATIC EQUATION
    ========================================================= */
 
-function solveQuadratic(text) {
+function solveQuadraticEquation(input) {
 
-    let equation = normalizeMath(text)
-        .replace(/^solve\s*:\s*/i, "")
-        .trim();
+    let equation =
+        cleanQuestionPrefix(input);
 
-    if (!equation.includes("=")) {
-        return null;
+    const equalIndex =
+        equation.indexOf("=");
+
+    if (equalIndex === -1) {
+        throw new Error(
+            "Quadratic equation must contain =."
+        );
     }
 
-    try {
+    const left =
+        equation.slice(0, equalIndex);
 
-        const parts = equation.split("=");
+    const right =
+        equation.slice(equalIndex + 1);
 
-        if (parts.length !== 2) {
-            return null;
-        }
+    const L =
+        parsePolynomial(left);
 
-        const left =
-            new PolynomialParser(
-                algebraTokens(parts[0])
-            ).parse();
+    const R =
+        parsePolynomial(right);
 
-        const right =
-            new PolynomialParser(
-                algebraTokens(parts[1])
-            ).parse();
+    const variable =
+        L.variable !== "x"
+            ? L.variable
+            : R.variable;
 
-        const combined =
-            subtractPolynomial(left, right);
-
-        const a = combined[2] || 0;
-        const b = combined[1] || 0;
-        const c = combined[0] || 0;
-
-        if (Math.abs(a) < 1e-12) {
-            return null;
-        }
-
-        const discriminant =
-            b * b - 4 * a * c;
-
-        const steps = [];
-
-        steps.push(
-            `a = ${formatNumber(a)}, b = ${formatNumber(b)}, c = ${formatNumber(c)}`
+    const poly =
+        polySubtract(
+            L.polynomial,
+            R.polynomial
         );
 
-        steps.push(
-            `D = b² - 4ac`
-        );
+    const a =
+        poly[2] || 0;
 
-        steps.push(
-            `D = ${formatNumber(discriminant)}`
-        );
+    const b =
+        poly[1] || 0;
 
-        if (discriminant < 0) {
+    const c =
+        poly[0] || 0;
 
-            steps.push(
-                currentLanguage === "hi"
-                    ? "Discriminant negative है, इसलिए real roots नहीं हैं।"
-                    : "The discriminant is negative, so there are no real roots."
-            );
+    if (Math.abs(a) < 1e-12) {
+        return solveLinearEquation(input);
+    }
 
-            return {
-                answer: "No real roots",
-                steps
-            };
-        }
+    const D =
+        b * b - 4 * a * c;
+
+    const steps = [];
+
+    steps.push(
+        `<strong>Step 1:</strong> Write the equation in standard form.`
+    );
+
+    steps.push(
+        `<div class="math-step-expression">${escapeHTML(
+            formatPolynomial(poly, variable)
+        )} = 0</div>`
+    );
+
+    steps.push(
+        `<strong>Step 2:</strong> Identify coefficients:`
+    );
+
+    steps.push(
+        `<div class="math-step-expression">a = ${formatNumber(a)}, b = ${formatNumber(b)}, c = ${formatNumber(c)}</div>`
+    );
+
+    steps.push(
+        `<strong>Step 3:</strong> Calculate the discriminant.`
+    );
+
+    steps.push(
+        `<div class="math-step-expression">Δ = b² − 4ac</div>`
+    );
+
+    steps.push(
+        `<div class="math-step-expression">Δ = (${formatNumber(b)})² − 4(${formatNumber(a)})(${formatNumber(c)})</div>`
+    );
+
+    steps.push(
+        `<div class="math-step-expression">Δ = ${formatNumber(D)}</div>`
+    );
+
+    if (D > 0) {
 
         const sqrtD =
-            Math.sqrt(discriminant);
+            Math.sqrt(D);
 
         const x1 =
             (-b + sqrtD) / (2 * a);
@@ -1696,26 +1664,86 @@ function solveQuadratic(text) {
             (-b - sqrtD) / (2 * a);
 
         steps.push(
-            `x = (-b ± √D) / 2a`
+            "<strong>Step 4:</strong> Since Δ > 0, there are two real solutions."
         );
 
         steps.push(
-            `x₁ = ${formatNumber(x1)}`
+            `<div class="math-step-expression">${escapeHTML(variable)}₁ = ${formatNumber(x1)}</div>`
         );
 
         steps.push(
-            `x₂ = ${formatNumber(x2)}`
+            `<div class="math-step-expression">${escapeHTML(variable)}₂ = ${formatNumber(x2)}</div>`
+        );
+
+        steps.push(
+            `<strong>Final Answer:</strong> ${escapeHTML(variable)} = ${formatNumber(x1)}, ${formatNumber(x2)}`
         );
 
         return {
             answer:
-                `x₁ = ${formatNumber(x1)}, x₂ = ${formatNumber(x2)}`,
+                `${variable} = ${formatNumber(x1)} or ${variable} = ${formatNumber(x2)}`,
             steps
         };
-
-    } catch (error) {
-        return null;
     }
+
+    if (Math.abs(D) < 1e-12) {
+
+        const x =
+            -b / (2 * a);
+
+        steps.push(
+            "<strong>Step 4:</strong> Since Δ = 0, there is one repeated real solution."
+        );
+
+        steps.push(
+            `<div class="math-step-expression">${escapeHTML(variable)} = ${formatNumber(x)}</div>`
+        );
+
+        steps.push(
+            `<strong>Final Answer:</strong> ${escapeHTML(variable)} = ${formatNumber(x)}`
+        );
+
+        return {
+            answer:
+                `${variable} = ${formatNumber(x)}`,
+            steps
+        };
+    }
+
+    const real =
+        -b / (2 * a);
+
+    const imaginary =
+        Math.sqrt(-D) /
+        Math.abs(2 * a);
+
+    steps.push(
+        "<strong>Step 4:</strong> Since Δ < 0, there are two complex solutions."
+    );
+
+    const x1 =
+        `${formatNumber(real)} + ${formatNumber(imaginary)}i`;
+
+    const x2 =
+        `${formatNumber(real)} - ${formatNumber(imaginary)}i`;
+
+    steps.push(
+        `<div class="math-step-expression">${escapeHTML(variable)}₁ = ${escapeHTML(x1)}</div>`
+    );
+
+    steps.push(
+        `<div class="math-step-expression">${escapeHTML(variable)}₂ = ${escapeHTML(x2)}</div>`
+    );
+
+    steps.push(
+        `<strong>Final Answer:</strong> ${escapeHTML(variable)} = ${escapeHTML(x1)}, ${escapeHTML(x2)}`
+    );
+
+    return {
+        answer:
+            `${variable} = ${x1} or ${variable} = ${x2}`,
+        steps
+    };
 }
 
 
@@ -1723,31 +1751,47 @@ function solveQuadratic(text) {
    PERCENTAGE
    ========================================================= */
 
-function solvePercentage(text) {
+function solvePercentage(input) {
 
-    const match =
-        text.match(
-            /(-?\d+(?:\.\d+)?)\s*%\s*(?:of|का|के)\s*(-?\d+(?:\.\d+)?)/i
+    const s =
+        normalizeMath(input);
+
+    let match =
+        s.match(
+            /(-?\d+(?:\.\d+)?)\s*%\s*(?:of)\s*(-?\d+(?:\.\d+)?)/i
         );
 
     if (!match) {
-        return null;
+        match =
+            s.match(
+                /(-?\d+(?:\.\d+)?)\s*percent\s*(?:of)\s*(-?\d+(?:\.\d+)?)/i
+            );
     }
 
-    const percent = Number(match[1]);
-    const number = Number(match[2]);
+    if (!match) {
+        throw new Error(
+            "Percentage format not recognized."
+        );
+    }
+
+    const percent =
+        Number(match[1]);
+
+    const number =
+        Number(match[2]);
 
     const result =
-        (percent / 100) * number;
+        percent / 100 * number;
 
     return {
         answer: formatNumber(result),
         steps: [
-            `${percent}% of ${number}`,
-            `= (${percent} ÷ 100) × ${number}`,
-            `= ${percent / 100} × ${number}`,
-            `= ${formatNumber(result)}`,
-            `Final Answer = ${formatNumber(result)}`
+            `<strong>Step 1:</strong> Identify the percentage: ${formatNumber(percent)}%`,
+            `<strong>Step 2:</strong> Convert percentage to decimal.`,
+            `<div class="math-step-expression">${formatNumber(percent)} ÷ 100 = ${formatNumber(percent / 100)}</div>`,
+            `<strong>Step 3:</strong> Multiply by ${formatNumber(number)}.`,
+            `<div class="math-step-expression">${formatNumber(percent / 100)} × ${formatNumber(number)} = ${formatNumber(result)}</div>`,
+            `<strong>Final Answer:</strong> ${formatNumber(result)}`
         ]
     };
 }
@@ -1757,26 +1801,27 @@ function solvePercentage(text) {
    AVERAGE
    ========================================================= */
 
-function solveAverage(text) {
+function solveAverage(input) {
 
-    const match =
-        text.match(
-            /average\s+of\s+(.+)/i
-        );
-
-    if (!match) {
-        return null;
-    }
+    let s =
+        String(input || "")
+            .replace(/average\s+of/i, "")
+            .replace(/औसत/i, "")
+            .trim();
 
     const numbers =
-        match[1]
-            .match(/-?\d+(?:\.\d+)?/g);
+        s.match(
+            /-?\d+(?:\.\d+)?/g
+        );
 
-    if (!numbers || numbers.length === 0) {
-        return null;
+    if (!numbers || numbers.length < 1) {
+        throw new Error(
+            "Could not find numbers for average."
+        );
     }
 
-    const values = numbers.map(Number);
+    const values =
+        numbers.map(Number);
 
     const sum =
         values.reduce(
@@ -1790,29 +1835,31 @@ function solveAverage(text) {
     return {
         answer: formatNumber(average),
         steps: [
-            `Numbers: ${values.join(", ")}`,
-            `Sum = ${formatNumber(sum)}`,
-            `Count = ${values.length}`,
-            `Average = Sum ÷ Count`,
-            `Average = ${formatNumber(sum)} ÷ ${values.length}`,
-            `Final Answer = ${formatNumber(average)}`
+            `<strong>Step 1:</strong> Add all the numbers.`,
+            `<div class="math-step-expression">${values.map(formatNumber).join(" + ")} = ${formatNumber(sum)}</div>`,
+            `<strong>Step 2:</strong> Count the numbers.`,
+            `<div class="math-step-expression">Count = ${values.length}</div>`,
+            `<strong>Step 3:</strong> Divide the sum by the count.`,
+            `<div class="math-step-expression">${formatNumber(sum)} ÷ ${values.length} = ${formatNumber(average)}</div>`,
+            `<strong>Final Answer:</strong> ${formatNumber(average)}`
         ]
     };
 }
 
 
 /* =========================================================
-   HCF
+   HCF / GCD
    ========================================================= */
 
 function gcd(a, b) {
 
-    a = Math.abs(a);
-    b = Math.abs(b);
+    a = Math.abs(Math.trunc(a));
+    b = Math.abs(Math.trunc(b));
 
     while (b !== 0) {
 
         const temp = b;
+
         b = a % b;
         a = temp;
     }
@@ -1820,43 +1867,50 @@ function gcd(a, b) {
     return a;
 }
 
-
-function solveHCF(text) {
+function solveHCF(input) {
 
     const numbers =
-        text.match(/\d+/g);
+        String(input || "")
+            .match(
+                /-?\d+/g
+            );
 
-    if (
-        !numbers ||
-        numbers.length < 2 ||
-        !/hcf|gcd|महत्तम/i.test(text)
-    ) {
-        return null;
+    if (!numbers || numbers.length < 2) {
+        throw new Error(
+            "Please provide at least two numbers for HCF."
+        );
     }
 
     const values =
         numbers.map(Number);
 
-    let result = values[0];
+    let result =
+        Math.abs(values[0]);
 
-    const steps = [
-        `Numbers: ${values.join(", ")}`
-    ];
+    const steps = [];
+
+    steps.push(
+        "<strong>Step 1:</strong> Find the greatest common divisor."
+    );
 
     for (let i = 1; i < values.length; i++) {
 
-        const before = result;
+        const next =
+            Math.abs(values[i]);
+
+        const old =
+            result;
 
         result =
-            gcd(result, values[i]);
+            gcd(result, next);
 
         steps.push(
-            `HCF(${before}, ${values[i]}) = ${result}`
+            `<div class="math-step-expression">HCF(${old}, ${next}) = ${result}</div>`
         );
     }
 
     steps.push(
-        `Final Answer = ${result}`
+        `<strong>Final Answer:</strong> ${result}`
     );
 
     return {
@@ -1872,48 +1926,73 @@ function solveHCF(text) {
 
 function lcm(a, b) {
 
+    a = Math.abs(Math.trunc(a));
+    b = Math.abs(Math.trunc(b));
+
+    if (a === 0 || b === 0) {
+        return 0;
+    }
+
     return Math.abs(
-        a * b
-    ) / gcd(a, b);
+        a / gcd(a, b) * b
+    );
 }
 
-
-function solveLCM(text) {
+function solveLCM(input) {
 
     const numbers =
-        text.match(/\d+/g);
+        String(input || "")
+            .match(
+                /-?\d+/g
+            );
 
-    if (
-        !numbers ||
-        numbers.length < 2 ||
-        !/lcm|लघुत्तम/i.test(text)
-    ) {
-        return null;
+    if (!numbers || numbers.length < 2) {
+        throw new Error(
+            "Please provide at least two numbers for LCM."
+        );
     }
 
     const values =
         numbers.map(Number);
 
-    let result = values[0];
+    let result =
+        Math.abs(values[0]);
 
-    const steps = [
-        `Numbers: ${values.join(", ")}`
-    ];
+    const steps = [];
+
+    steps.push(
+        "<strong>Step 1:</strong> Use the LCM relation:"
+    );
+
+    steps.push(
+        `<div class="math-step-expression">LCM(a,b) = |a × b| ÷ HCF(a,b)</div>`
+    );
 
     for (let i = 1; i < values.length; i++) {
 
-        const before = result;
+        const next =
+            Math.abs(values[i]);
+
+        const old =
+            result;
+
+        const common =
+            gcd(old, next);
 
         result =
-            lcm(result, values[i]);
+            lcm(old, next);
 
         steps.push(
-            `LCM(${before}, ${values[i]}) = ${result}`
+            `<div class="math-step-expression">HCF(${old}, ${next}) = ${common}</div>`
+        );
+
+        steps.push(
+            `<div class="math-step-expression">LCM(${old}, ${next}) = ${result}</div>`
         );
     }
 
     steps.push(
-        `Final Answer = ${result}`
+        `<strong>Final Answer:</strong> ${result}`
     );
 
     return {
@@ -1927,37 +2006,59 @@ function solveLCM(text) {
    SQUARE ROOT
    ========================================================= */
 
-function solveSquareRoot(text) {
+function solveSquareRoot(input) {
 
-    const match =
-        text.match(
-            /(?:sqrt|square\s+root|√)\s*\(?\s*(-?\d+(?:\.\d+)?)\s*\)?/i
+    let s =
+        normalizeMath(input);
+
+    s =
+        s.replace(
+            /^sqrt\s*\(?\s*/i,
+            ""
+        )
+        .replace(
+            /\)?$/,
+            ""
+        )
+        .trim();
+
+    const value =
+        Number(s);
+
+    if (!Number.isFinite(value)) {
+        throw new Error(
+            "Square root requires a valid number."
         );
-
-    if (!match) {
-        return null;
     }
 
-    const number = Number(match[1]);
+    if (value < 0) {
 
-    if (number < 0) {
+        const imaginary =
+            Math.sqrt(-value);
+
         return {
-            answer: "No real answer",
+            answer:
+                `${formatNumber(imaginary)}i`,
             steps: [
-                "The square root of a negative number is not a real number."
+                `<strong>Step 1:</strong> The number is negative.`,
+                `<strong>Step 2:</strong> √(-a) = i√a.`,
+                `<div class="math-step-expression">√${formatNumber(value)} = ${formatNumber(imaginary)}i</div>`,
+                `<strong>Final Answer:</strong> ${formatNumber(imaginary)}i`
             ]
         };
     }
 
     const result =
-        Math.sqrt(number);
+        Math.sqrt(value);
 
     return {
         answer: formatNumber(result),
         steps: [
-            `√${number}`,
-            `= ${formatNumber(result)}`,
-            `Final Answer = ${formatNumber(result)}`
+            `<strong>Step 1:</strong> Identify the number under the square root.`,
+            `<div class="math-step-expression">√${formatNumber(value)}</div>`,
+            `<strong>Step 2:</strong> Find the number which multiplied by itself gives ${formatNumber(value)}.`,
+            `<div class="math-step-expression">${formatNumber(result)} × ${formatNumber(result)} = ${formatNumber(value)}</div>`,
+            `<strong>Final Answer:</strong> ${formatNumber(result)}`
         ]
     };
 }
@@ -1967,19 +2068,27 @@ function solveSquareRoot(text) {
    POWER
    ========================================================= */
 
-function solvePower(text) {
+function solvePower(input) {
+
+    const s =
+        normalizeMath(input);
 
     const match =
-        text.match(
-            /(-?\d+(?:\.\d+)?)\s*\^\s*(-?\d+(?:\.\d+)?)/i
+        s.match(
+            /^\s*(-?\d+(?:\.\d+)?)\s*\^\s*(-?\d+(?:\.\d+)?)\s*$/
         );
 
     if (!match) {
-        return null;
+        throw new Error(
+            "Power format not recognized."
+        );
     }
 
-    const base = Number(match[1]);
-    const exponent = Number(match[2]);
+    const base =
+        Number(match[1]);
+
+    const exponent =
+        Number(match[2]);
 
     const result =
         Math.pow(base, exponent);
@@ -1987,9 +2096,11 @@ function solvePower(text) {
     return {
         answer: formatNumber(result),
         steps: [
-            `${formatNumber(base)}^${formatNumber(exponent)}`,
-            `= ${formatNumber(result)}`,
-            `Final Answer = ${formatNumber(result)}`
+            `<strong>Step 1:</strong> Identify the base and exponent.`,
+            `<div class="math-step-expression">Base = ${formatNumber(base)}, Exponent = ${formatNumber(exponent)}</div>`,
+            `<strong>Step 2:</strong> Apply the power.`,
+            `<div class="math-step-expression">${formatNumber(base)}^${formatNumber(exponent)} = ${formatNumber(result)}</div>`,
+            `<strong>Final Answer:</strong> ${formatNumber(result)}`
         ]
     };
 }
@@ -1999,132 +2110,488 @@ function solvePower(text) {
    FACTORIAL
    ========================================================= */
 
-function factorial(n) {
+function solveFactorial(input) {
 
-    if (n < 0 || !Number.isInteger(n)) {
-        throw new Error("Invalid factorial");
+    const match =
+        String(input || "")
+            .trim()
+            .match(
+                /^(-?\d+)\s*!$/
+            );
+
+    if (!match) {
+        throw new Error(
+            "Factorial format not recognized."
+        );
+    }
+
+    const n =
+        Number(match[1]);
+
+    if (n < 0) {
+        throw new Error(
+            "Factorial is not defined for negative integers."
+        );
+    }
+
+    if (n > 170) {
+        throw new Error(
+            "Number is too large for standard factorial calculation."
+        );
     }
 
     let result = 1;
 
-    for (let i = 2; i <= n; i++) {
+    const operations = [];
+
+    for (let i = 1; i <= n; i++) {
+
         result *= i;
+
+        operations.push(i);
     }
-
-    return result;
-}
-
-
-function solveFactorial(text) {
-
-    const match =
-        text.match(
-            /(\d+)\s*!/
-        );
-
-    if (!match) {
-        return null;
-    }
-
-    const n = Number(match[1]);
-
-    if (n > 170) {
-        return null;
-    }
-
-    const result = factorial(n);
 
     return {
-        answer: String(result),
+        answer: formatNumber(result),
         steps: [
-            `${n}! = ${Array.from(
-                { length: n },
-                (_, i) => i + 1
-            ).join(" × ")}`,
-            `= ${result}`,
-            `Final Answer = ${result}`
+            `<strong>Step 1:</strong> Factorial means multiplying all positive integers up to the number.`,
+            `<div class="math-step-expression">${n}! = ${operations.join(" × ")}</div>`,
+            `<strong>Step 2:</strong> Calculate the product.`,
+            `<div class="math-step-expression">${formatNumber(result)}</div>`,
+            `<strong>Final Answer:</strong> ${formatNumber(result)}`
         ]
     };
 }
 
 
 /* =========================================================
-   NUMERIC BODMAS SOLVER
+   NUMERIC TOKENIZER
    ========================================================= */
 
-function solveBODMAS(text) {
+function tokenizeNumeric(expression) {
+
+    const tokens = [];
+
+    let i = 0;
+
+    while (i < expression.length) {
+
+        const ch = expression[i];
+
+        if (/\s/.test(ch)) {
+            i++;
+            continue;
+        }
+
+        if (/[0-9.]/.test(ch)) {
+
+            let start = i;
+
+            while (
+                i < expression.length &&
+                /[0-9.]/.test(expression[i])
+            ) {
+                i++;
+            }
+
+            tokens.push({
+                type: "number",
+                value: Number(
+                    expression.slice(start, i)
+                )
+            });
+
+            continue;
+        }
+
+        if ("+-*/^()".includes(ch)) {
+
+            tokens.push({
+                type: "operator",
+                value: ch
+            });
+
+            i++;
+            continue;
+        }
+
+        throw new Error(
+            "Unsupported numeric symbol: " + ch
+        );
+    }
+
+    return tokens;
+}
+
+
+/* =========================================================
+   NUMERIC BODMAS PARSER
+   ========================================================= */
+
+class NumericParser {
+
+    constructor(tokens) {
+
+        this.tokens = tokens;
+        this.position = 0;
+
+        this.steps = [];
+    }
+
+    current() {
+        return this.tokens[this.position];
+    }
+
+    consume(value) {
+
+        const token = this.current();
+
+        if (
+            token &&
+            token.value === value
+        ) {
+            this.position++;
+            return true;
+        }
+
+        return false;
+    }
+
+    parse() {
+
+        const value =
+            this.parseExpression();
+
+        if (
+            this.position <
+            this.tokens.length
+        ) {
+            throw new Error(
+                "Unexpected token."
+            );
+        }
+
+        return value;
+    }
+
+    parseExpression() {
+
+        let value =
+            this.parseTerm();
+
+        while (true) {
+
+            if (this.consume("+")) {
+
+                const right =
+                    this.parseTerm();
+
+                const result =
+                    value + right;
+
+                this.addStep(
+                    value,
+                    "+",
+                    right,
+                    result
+                );
+
+                value = result;
+
+                continue;
+            }
+
+            if (this.consume("-")) {
+
+                const right =
+                    this.parseTerm();
+
+                const result =
+                    value - right;
+
+                this.addStep(
+                    value,
+                    "-",
+                    right,
+                    result
+                );
+
+                value = result;
+
+                continue;
+            }
+
+            break;
+        }
+
+        return value;
+    }
+
+    parseTerm() {
+
+        let value =
+            this.parsePower();
+
+        while (true) {
+
+            if (this.consume("*")) {
+
+                const right =
+                    this.parsePower();
+
+                const result =
+                    value * right;
+
+                this.addStep(
+                    value,
+                    "×",
+                    right,
+                    result
+                );
+
+                value = result;
+
+                continue;
+            }
+
+            if (this.consume("/")) {
+
+                const right =
+                    this.parsePower();
+
+                if (right === 0) {
+                    throw new Error(
+                        "Division by zero is not allowed."
+                    );
+                }
+
+                const result =
+                    value / right;
+
+                this.addStep(
+                    value,
+                    "÷",
+                    right,
+                    result
+                );
+
+                value = result;
+
+                continue;
+            }
+
+            break;
+        }
+
+        return value;
+    }
+
+    parsePower() {
+
+        let value =
+            this.parseUnary();
+
+        if (this.consume("^")) {
+
+            const right =
+                this.parsePower();
+
+            const result =
+                Math.pow(value, right);
+
+            this.addStep(
+                value,
+                "^",
+                right,
+                result
+            );
+
+            value = result;
+        }
+
+        return value;
+    }
+
+    parseUnary() {
+
+        if (this.consume("+")) {
+            return this.parseUnary();
+        }
+
+        if (this.consume("-")) {
+
+            const value =
+                this.parseUnary();
+
+            return -value;
+        }
+
+        return this.parsePrimary();
+    }
+
+    parsePrimary() {
+
+        const token =
+            this.current();
+
+        if (!token) {
+            throw new Error(
+                "Unexpected end."
+            );
+        }
+
+        if (token.type === "number") {
+
+            this.position++;
+
+            return token.value;
+        }
+
+        if (this.consume("(")) {
+
+            const value =
+                this.parseExpression();
+
+            if (!this.consume(")")) {
+                throw new Error(
+                    "Missing closing bracket."
+                );
+            }
+
+            return value;
+        }
+
+        throw new Error(
+            "Invalid numeric expression."
+        );
+    }
+
+    addStep(left, operator, right, result) {
+
+        this.steps.push({
+            left,
+            operator,
+            right,
+            result
+        });
+    }
+}
+
+
+/* =========================================================
+   BODMAS SOLVER
+   ========================================================= */
+
+function solveBODMAS(input) {
 
     let expression =
-        normalizeMath(text);
+        cleanQuestionPrefix(input);
 
     expression =
-        expression
-            .replace(
-                /^evaluate\s*:\s*/i,
-                ""
-            )
-            .replace(
-                /^calculate\s*:\s*/i,
-                ""
-            )
-            .replace(
-                /^solve\s*:\s*/i,
-                ""
-            )
-            .trim();
-
-    /*
-       PI
-    */
+        normalizeMath(expression);
 
     expression =
         expression.replace(
-            /\bPI\b/g,
-            String(Math.PI)
+            /^evaluate\s*:\s*/i,
+            ""
         );
 
     /*
-       Percent numbers
-    */
-
-    expression =
-        expression.replace(
-            /(\d+(?:\.\d+)?)%/g,
-            "($1/100)"
-        );
-
-    /*
-       Only pure numeric expressions here.
+     Only numeric expressions here.
     */
 
     if (
-        !/^[0-9+\-*/().^ \t]+$/.test(
-            expression
-        )
+        /[a-zA-Z]/.test(expression)
     ) {
-        return null;
+        throw new Error(
+            "Not a pure numeric expression."
+        );
     }
 
-    try {
-
-        const result =
-            solveNumericExpression(
-                expression
-            );
-
-        return {
-            answer:
-                formatNumber(result.value),
-            steps:
-                buildNumericSteps(
-                    expression,
-                    result
-                )
-        };
-
-    } catch (error) {
-        return null;
+    if (!/[0-9]/.test(expression)) {
+        throw new Error(
+            "No numbers found."
+        );
     }
+
+    const tokens =
+        tokenizeNumeric(expression);
+
+    const parser =
+        new NumericParser(tokens);
+
+    const result =
+        parser.parse();
+
+    const steps = [];
+
+    steps.push(
+        "<strong>Step 1: Follow BODMAS / order of operations.</strong>"
+    );
+
+    steps.push(
+        "<div class=\"math-step-expression\">B = Brackets → O = Orders → D/M = Division/Multiplication → A/S = Addition/Subtraction</div>"
+    );
+
+    /*
+     Explain signs where possible.
+    */
+
+    if (
+        /-\s*\d+/.test(expression) &&
+        /[×*]/.test(expression)
+    ) {
+
+        steps.push(
+            "<strong>Step 2: Handle multiplication/division before addition/subtraction.</strong>"
+        );
+
+        steps.push(
+            "Remember: negative × negative = positive, while negative ÷ positive = negative."
+        );
+
+    } else {
+
+        steps.push(
+            "<strong>Step 2: Perform multiplication and division before addition and subtraction.</strong>"
+        );
+    }
+
+    parser.steps.forEach((step, index) => {
+
+        const operator =
+            step.operator;
+
+        steps.push(
+            `<div class="math-step-expression">${formatNumber(step.left)} ${operator} ${formatNumber(step.right)} = <strong>${formatNumber(step.result)}</strong></div>`
+        );
+    });
+
+    steps.push(
+        `<strong>Final Answer:</strong> ${formatNumber(result)}`
+    );
+
+    return {
+        answer: formatNumber(result),
+        steps
+    };
+}
+
+
+/* =========================================================
+   BASIC NUMERIC EXPRESSION
+   ========================================================= */
+
+function isNumericExpression(expression) {
+
+    const s =
+        normalizeMath(expression);
+
+    if (!/[0-9]/.test(s)) {
+        return false;
+    }
+
+    return !/[a-zA-Z]/.test(s);
 }
 
 
@@ -2132,186 +2599,245 @@ function solveBODMAS(text) {
    MAIN SOLVER
    ========================================================= */
 
-function solveQuestion(question) {
+function solveQuestion(rawInput) {
 
-    let text =
-        cleanSpaces(
-            normalizeHindiNumbers(
-                question
-            )
+    const original =
+        String(rawInput || "").trim();
+
+    if (!original) {
+
+        throw new Error(
+            TEXT[currentLanguage].enterQuestion
         );
+    }
 
-    if (!text) {
-        return {
-            answer: "",
-            steps: [
-                TEXT[currentLanguage].noQuestion
-            ]
-        };
+    let input =
+        normalizeVoiceText(original);
+
+    if (!input) {
+        input = original;
     }
 
     /*
-       1. Factorial
-    */
-
-    const factorialResult =
-        solveFactorial(text);
-
-    if (factorialResult) {
-        return factorialResult;
-    }
-
-    /*
-       2. Percentage
-    */
-
-    const percentageResult =
-        solvePercentage(text);
-
-    if (percentageResult) {
-        return percentageResult;
-    }
-
-    /*
-       3. Average
-    */
-
-    const averageResult =
-        solveAverage(text);
-
-    if (averageResult) {
-        return averageResult;
-    }
-
-    /*
-       4. HCF
-    */
-
-    const hcfResult =
-        solveHCF(text);
-
-    if (hcfResult) {
-        return hcfResult;
-    }
-
-    /*
-       5. LCM
-    */
-
-    const lcmResult =
-        solveLCM(text);
-
-    if (lcmResult) {
-        return lcmResult;
-    }
-
-    /*
-       6. Square root
-    */
-
-    const rootResult =
-        solveSquareRoot(text);
-
-    if (rootResult) {
-        return rootResult;
-    }
-
-    /*
-       7. Quadratic equation
-       Must come before linear.
-    */
+     ======================================================
+     1. PERCENTAGE
+     ======================================================
+     */
 
     if (
-        text.includes("=") &&
-        /x\s*(?:\^2|²)/i.test(
-            text
+        /%.*\bof\b/i.test(input) ||
+        /\bpercent\b.*\bof\b/i.test(input)
+    ) {
+
+        return solvePercentage(input);
+    }
+
+
+    /*
+     ======================================================
+     2. HCF
+     ======================================================
+     */
+
+    if (
+        /\b(hcf|gcd|greatest common divisor)\b/i.test(input) ||
+        /महत्तम समापवर्तक/i.test(input)
+    ) {
+
+        return solveHCF(input);
+    }
+
+
+    /*
+     ======================================================
+     3. LCM
+     ======================================================
+     */
+
+    if (
+        /\b(lcm|least common multiple)\b/i.test(input) ||
+        /लघुत्तम समापवर्त्य/i.test(input)
+    ) {
+
+        return solveLCM(input);
+    }
+
+
+    /*
+     ======================================================
+     4. AVERAGE
+     ======================================================
+     */
+
+    if (
+        /\baverage\b/i.test(input) ||
+        /औसत/i.test(input)
+    ) {
+
+        return solveAverage(input);
+    }
+
+
+    /*
+     ======================================================
+     5. FACTORIAL
+     ======================================================
+     */
+
+    if (
+        /^\s*-?\d+\s*!\s*$/.test(
+            normalizeMath(input)
         )
     ) {
 
-        const quadratic =
-            solveQuadratic(text);
-
-        if (quadratic) {
-            return quadratic;
-        }
+        return solveFactorial(input);
     }
 
+
     /*
-       8. Linear equation
-    */
+     ======================================================
+     6. SQUARE ROOT
+     ======================================================
+     */
 
     if (
-        text.includes("=") &&
-        /[a-zA-Z]/.test(text)
+        /^\s*(?:√|sqrt)\s*\(?\s*-?\d+(?:\.\d+)?\s*\)?\s*$/i.test(
+            input
+        )
     ) {
 
-        const linear =
-            solveLinearEquation(text);
-
-        if (linear) {
-            return linear;
-        }
+        return solveSquareRoot(input);
     }
 
+
     /*
-       9. Algebra simplification
-    */
+     ======================================================
+     7. POWER
+     ======================================================
+     */
 
     if (
-        hasVariable(text) &&
-        !text.includes("=")
+        /^\s*-?\d+(?:\.\d+)?\s*\^\s*-?\d+(?:\.\d+)?\s*$/.test(
+            normalizeMath(input)
+        )
     ) {
+
+        return solvePower(input);
+    }
+
+
+    /*
+     ======================================================
+     8. EQUATION
+     ======================================================
+     */
+
+    if (input.includes("=")) {
+
+        const normalized =
+            normalizeMath(input);
+
+        /*
+         Determine polynomial degree.
+        */
 
         try {
 
-            const algebra =
-                solveAlgebraSimplification(
-                    text
+            const equalIndex =
+                normalized.indexOf("=");
+
+            const left =
+                normalized.slice(
+                    0,
+                    equalIndex
                 );
 
-            if (algebra) {
-                return algebra;
+            const right =
+                normalized.slice(
+                    equalIndex + 1
+                );
+
+            const L =
+                parsePolynomial(left);
+
+            const R =
+                parsePolynomial(right);
+
+            const difference =
+                polySubtract(
+                    L.polynomial,
+                    R.polynomial
+                );
+
+            const degree =
+                Math.max(
+                    ...Object.keys(difference)
+                        .map(Number)
+                );
+
+            if (degree >= 2) {
+
+                return solveQuadraticEquation(
+                    normalized
+                );
             }
 
+            return solveLinearEquation(
+                normalized
+            );
+
         } catch (error) {
-            /*
-               Continue to other solvers.
-            */
+
+            throw error;
         }
     }
 
+
     /*
-       10. Power
+     ======================================================
+     9. ALGEBRA
+     ======================================================
+     */
+
+    /*
+     If letters exist, treat as algebra.
+    This is important for:
+    
+    2x
+    4(x+1)
+    (x+2)(x+3)
+    3x²+5x-2
     */
 
-    const powerResult =
-        solvePower(text);
+    if (
+        /[a-zA-Z]/.test(
+            normalizeMath(input)
+        )
+    ) {
 
-    if (powerResult) {
-        return powerResult;
+        return solveAlgebraSimplification(
+            input
+        );
     }
 
+
     /*
-       11. Numeric BODMAS
-    */
+     ======================================================
+     10. NUMERIC BODMAS
+     ======================================================
+     */
 
-    const bodmas =
-        solveBODMAS(text);
+    if (
+        isNumericExpression(input)
+    ) {
 
-    if (bodmas) {
-        return bodmas;
+        return solveBODMAS(input);
     }
 
-    /*
-       Nothing matched.
-    */
 
-    return {
-        answer: "",
-        steps: [
-            TEXT[currentLanguage].unable
-        ]
-    };
+    throw new Error(
+        TEXT[currentLanguage].cannotSolve
+    );
 }
 
 
@@ -2321,43 +2847,30 @@ function solveQuestion(question) {
 
 function renderResult(result) {
 
-    if (!resultSection) {
+    if (!$("resultSection")) {
         return;
     }
 
-    resultSection.hidden = false;
+    $("resultSection").hidden = false;
 
-    if (answerBox) {
+    if ($("answer")) {
 
-        answerBox.innerHTML =
-            result.answer
-                ? escapeHTML(result.answer)
-                : `<span class="solver-error">${
-                    escapeHTML(
-                        TEXT[currentLanguage].unable
-                    )
-                }</span>`;
+        $("answer").innerHTML =
+            `<div class="final-answer-box">${escapeHTML(result.answer)}</div>`;
     }
 
-    if (stepsBox) {
+    if ($("steps")) {
 
-        stepsBox.innerHTML =
+        $("steps").innerHTML =
             result.steps
                 .map(
-                    (step, index) =>
-                        `<div class="solution-step">
-                            <span class="step-number">
-                                ${index + 1}
-                            </span>
-                            <span class="step-text">
-                                ${escapeHTML(step)}
-                            </span>
-                        </div>`
+                    step =>
+                        `<div class="solution-step">${step}</div>`
                 )
                 .join("");
     }
 
-    resultSection.scrollIntoView({
+    $("resultSection").scrollIntoView({
         behavior: "smooth",
         block: "start"
     });
@@ -2365,107 +2878,361 @@ function renderResult(result) {
 
 
 /* =========================================================
-   HISTORY
+   SOLVE BUTTON
+   ========================================================= */
+
+function handleSolve() {
+
+    const question =
+        $("question")
+            ? $("question").value.trim()
+            : "";
+
+    if (!question) {
+
+        showError(
+            TEXT[currentLanguage].enterQuestion
+        );
+
+        return;
+    }
+
+    try {
+
+        const result =
+            solveQuestion(question);
+
+        renderResult(result);
+
+        addHistory(
+            question,
+            result
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Math King Solver Error:",
+            error
+        );
+
+        showError(
+            error.message ||
+            TEXT[currentLanguage].cannotSolve
+        );
+    }
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+function showError(message) {
+
+    if (!$("resultSection")) {
+        return;
+    }
+
+    $("resultSection").hidden = false;
+
+    if ($("answer")) {
+
+        $("answer").innerHTML =
+            `<div class="error-answer-box">⚠️ ${escapeHTML(message)}</div>`;
+    }
+
+    if ($("steps")) {
+
+        $("steps").innerHTML =
+            `<div class="solution-step">
+                <strong>Please check the question and try again.</strong>
+             </div>`;
+    }
+
+    $("resultSection").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+/* =========================================================
+   HISTORY STORAGE
    ========================================================= */
 
 function getHistory() {
 
     try {
 
-        let data =
-            JSON.parse(
-                localStorage.getItem(
-                    HISTORY_KEY
-                ) || "[]"
+        let raw =
+            localStorage.getItem(
+                HISTORY_KEY
             );
 
         /*
-           Migrate old history if present.
+         Migrate old history.
         */
 
-        if (
-            !data.length &&
-            localStorage.getItem(
-                LEGACY_HISTORY_KEY
-            )
-        ) {
+        if (!raw) {
 
-            data =
-                JSON.parse(
-                    localStorage.getItem(
-                        LEGACY_HISTORY_KEY
-                    ) || "[]"
+            const old =
+                localStorage.getItem(
+                    OLD_HISTORY_KEY
                 );
 
-            localStorage.setItem(
-                HISTORY_KEY,
-                JSON.stringify(data)
-            );
+            if (old) {
+
+                localStorage.setItem(
+                    HISTORY_KEY,
+                    old
+                );
+
+                raw = old;
+            }
         }
 
-        return Array.isArray(data)
-            ? data
+        if (!raw) {
+            return [];
+        }
+
+        const parsed =
+            JSON.parse(raw);
+
+        return Array.isArray(parsed)
+            ? parsed
             : [];
 
     } catch (error) {
+
+        console.warn(
+            "History read error:",
+            error
+        );
 
         return [];
     }
 }
 
+function saveHistory(history) {
 
-function saveHistory(question, result) {
+    try {
 
-    if (!question) {
+        localStorage.setItem(
+            HISTORY_KEY,
+            JSON.stringify(
+                history.slice(0, 50)
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "History save error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   ADD HISTORY
+   ========================================================= */
+
+function addHistory(question, result) {
+
+    const history =
+        getHistory();
+
+    const item = {
+        id:
+            Date.now() +
+            Math.random()
+                .toString(36)
+                .slice(2),
+
+        question,
+
+        answer:
+            result.answer,
+
+        steps:
+            result.steps,
+
+        date:
+            new Date().toISOString()
+    };
+
+    history.unshift(item);
+
+    saveHistory(history);
+
+    renderHistory();
+}
+
+
+/* =========================================================
+   RENDER HISTORY
+   ========================================================= */
+
+function renderHistory() {
+
+    const container =
+        $("historyList");
+
+    if (!container) {
         return;
     }
 
     const history =
         getHistory();
 
-    history.unshift({
-        id: Date.now(),
-        question,
-        answer: result.answer,
-        steps: result.steps,
-        time: new Date().toISOString()
-    });
+    if (history.length === 0) {
 
-    localStorage.setItem(
-        HISTORY_KEY,
-        JSON.stringify(
-            history.slice(0, 50)
-        )
-    );
+        container.innerHTML =
+            `<div class="empty-history">
+                ${escapeHTML(TEXT[currentLanguage].noHistory)}
+             </div>`;
 
-    renderHistory();
+        return;
+    }
+
+    container.innerHTML =
+        history.map(item => {
+
+            return `
+                <div
+                    class="history-item"
+                    data-history-id="${escapeHTML(item.id)}"
+                >
+
+                    <button
+                        class="history-open"
+                        type="button"
+                        data-history-open="${escapeHTML(item.id)}"
+                    >
+
+                        <div class="history-question">
+                            ${escapeHTML(item.question)}
+                        </div>
+
+                        <div class="history-answer">
+                            = ${escapeHTML(item.answer)}
+                        </div>
+
+                    </button>
+
+                    <button
+                        class="history-delete"
+                        type="button"
+                        data-history-delete="${escapeHTML(item.id)}"
+                        title="Delete"
+                        aria-label="Delete"
+                    >
+                        ×
+                    </button>
+
+                </div>
+            `;
+
+        }).join("");
 }
 
 
-function deleteHistoryItem(id) {
+/* =========================================================
+   HISTORY CLICK
+   ========================================================= */
 
-    const history =
-        getHistory()
-            .filter(item => item.id !== id);
+function handleHistoryClick(event) {
 
-    localStorage.setItem(
-        HISTORY_KEY,
-        JSON.stringify(history)
-    );
+    const openButton =
+        event.target.closest(
+            "[data-history-open]"
+        );
 
-    renderHistory();
+    const deleteButton =
+        event.target.closest(
+            "[data-history-delete]"
+        );
+
+    if (deleteButton) {
+
+        const id =
+            deleteButton.dataset.historyDelete;
+
+        const history =
+            getHistory()
+                .filter(item => item.id !== id);
+
+        saveHistory(history);
+
+        renderHistory();
+
+        return;
+    }
+
+    if (openButton) {
+
+        const id =
+            openButton.dataset.historyOpen;
+
+        const history =
+            getHistory();
+
+        const item =
+            history.find(
+                entry => entry.id === id
+            );
+
+        if (!item) {
+            return;
+        }
+
+        if ($("question")) {
+            $("question").value =
+                item.question;
+        }
+
+        try {
+
+            const result =
+                solveQuestion(
+                    item.question
+                );
+
+            renderResult(result);
+
+        } catch (error) {
+
+            showError(
+                error.message
+            );
+        }
+    }
 }
 
+
+/* =========================================================
+   CLEAR HISTORY
+   ========================================================= */
 
 function clearHistory() {
 
-    if (
-        !confirm(
+    const history =
+        getHistory();
+
+    if (history.length === 0) {
+        return;
+    }
+
+    const confirmed =
+        window.confirm(
             currentLanguage === "hi"
-                ? "क्या आप पूरी History हटाना चाहते हैं?"
-                : "Clear all history?"
-        )
-    ) {
+                ? "क्या आप पूरी calculation history हटाना चाहते हैं?"
+                : "Do you want to delete all calculation history?"
+        );
+
+    if (!confirmed) {
         return;
     }
 
@@ -2473,128 +3240,28 @@ function clearHistory() {
         HISTORY_KEY
     );
 
-    localStorage.removeItem(
-        LEGACY_HISTORY_KEY
-    );
-
     renderHistory();
 }
 
 
-function renderHistory() {
-
-    if (!historyList) {
-        return;
-    }
-
-    const history =
-        getHistory();
-
-    if (!history.length) {
-
-        historyList.innerHTML =
-            `<div class="empty-history">
-                ${
-                    currentLanguage === "hi"
-                        ? "अभी कोई History नहीं है।"
-                        : "No history yet."
-                }
-            </div>`;
-
-        return;
-    }
-
-    historyList.innerHTML =
-        history
-            .map(item => {
-
-                return `
-                    <div class="history-item">
-
-                        <button
-                            class="history-question"
-                            data-history-id="${item.id}"
-                        >
-                            ${escapeHTML(item.question)}
-                        </button>
-
-                        <div class="history-answer">
-                            ${escapeHTML(item.answer)}
-                        </div>
-
-                        <button
-                            class="history-delete"
-                            data-delete-id="${item.id}"
-                            type="button"
-                        >
-                            ×
-                        </button>
-
-                    </div>
-                `;
-
-            })
-            .join("");
-}
-
-
 /* =========================================================
-   SOLVE ACTION
+   CLEAR INPUT
    ========================================================= */
 
-function solveCurrentQuestion() {
+function clearInput() {
 
-    const question =
-        cleanSpaces(
-            questionInput
-                ? questionInput.value
-                : ""
-        );
-
-    if (!question) {
-
-        alert(
-            TEXT[currentLanguage].noQuestion
-        );
-
-        return;
+    if ($("question")) {
+        $("question").value = "";
+        $("question").focus();
     }
 
-    const result =
-        solveQuestion(question);
-
-    renderResult(result);
-
-    if (result.answer) {
-        saveHistory(
-            question,
-            result
-        );
-    }
-}
-
-
-/* =========================================================
-   CLEAR
-   ========================================================= */
-
-function clearCurrentQuestion() {
-
-    if (questionInput) {
-        questionInput.value = "";
-        questionInput.focus();
+    if ($("resultSection")) {
+        $("resultSection").hidden = true;
     }
 
-    if (resultSection) {
-        resultSection.hidden = true;
-    }
-
-    if (answerBox) {
-        answerBox.innerHTML = "";
-    }
-
-    if (stepsBox) {
-        stepsBox.innerHTML = "";
+    if ($("voiceStatus")) {
+        $("voiceStatus").textContent =
+            TEXT[currentLanguage].voiceReady;
     }
 }
 
@@ -2605,76 +3272,83 @@ function clearCurrentQuestion() {
 
 function insertAtCursor(text) {
 
-    if (!questionInput) {
+    const textarea =
+        $("question");
+
+    if (!textarea) {
         return;
     }
 
     const start =
-        questionInput.selectionStart ??
-        questionInput.value.length;
+        textarea.selectionStart;
 
     const end =
-        questionInput.selectionEnd ??
-        questionInput.value.length;
+        textarea.selectionEnd;
 
-    questionInput.value =
-        questionInput.value.slice(0, start) +
+    const value =
+        textarea.value;
+
+    textarea.value =
+        value.slice(0, start) +
         text +
-        questionInput.value.slice(end);
+        value.slice(end);
 
-    const cursor =
+    const newPosition =
         start + text.length;
 
-    questionInput.focus();
+    textarea.selectionStart =
+        newPosition;
 
-    questionInput.setSelectionRange(
-        cursor,
-        cursor
-    );
+    textarea.selectionEnd =
+        newPosition;
+
+    textarea.focus();
 }
-
 
 function backspaceAtCursor() {
 
-    if (!questionInput) {
+    const textarea =
+        $("question");
+
+    if (!textarea) {
         return;
     }
 
     const start =
-        questionInput.selectionStart;
+        textarea.selectionStart;
 
     const end =
-        questionInput.selectionEnd;
+        textarea.selectionEnd;
+
+    if (
+        start === 0 &&
+        end === 0
+    ) {
+        return;
+    }
 
     if (start !== end) {
 
-        questionInput.value =
-            questionInput.value.slice(0, start) +
-            questionInput.value.slice(end);
+        textarea.value =
+            textarea.value.slice(0, start) +
+            textarea.value.slice(end);
 
-        questionInput.setSelectionRange(
-            start,
-            start
-        );
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start;
 
         return;
     }
 
-    if (start > 0) {
+    textarea.value =
+        textarea.value.slice(0, start - 1) +
+        textarea.value.slice(start);
 
-        questionInput.value =
-            questionInput.value.slice(0, start - 1) +
-            questionInput.value.slice(start);
+    textarea.selectionStart =
+        start - 1;
 
-        questionInput.setSelectionRange(
-            start - 1,
-            start - 1
-        );
-    }
-
-    questionInput.focus();
+    textarea.selectionEnd =
+        start - 1;
 }
-
 
 function setupMathKeyboard() {
 
@@ -2693,17 +3367,38 @@ function setupMathKeyboard() {
                         return;
                     }
 
-                    insertAtCursor(symbol);
+                    insertAtCursor(
+                        symbol
+                    );
                 }
             );
         });
 
-    if (backspaceBtn) {
+    if ($("backspaceBtn")) {
 
-        backspaceBtn.addEventListener(
-            "click",
-            backspaceAtCursor
-        );
+        $("backspaceBtn")
+            .addEventListener(
+                "click",
+                backspaceAtCursor
+            );
+    }
+
+    if ($("keyboardBackspaceBtn")) {
+
+        $("keyboardBackspaceBtn")
+            .addEventListener(
+                "click",
+                backspaceAtCursor
+            );
+    }
+
+    if ($("deleteAllBtn")) {
+
+        $("deleteAllBtn")
+            .addEventListener(
+                "click",
+                clearInput
+            );
     }
 }
 
@@ -2715,7 +3410,9 @@ function setupMathKeyboard() {
 function setupExamples() {
 
     document
-        .querySelectorAll("[data-example]")
+        .querySelectorAll(
+            "[data-example]"
+        )
         .forEach(button => {
 
             button.addEventListener(
@@ -2725,12 +3422,13 @@ function setupExamples() {
                     const example =
                         button.dataset.example;
 
-                    if (questionInput) {
-                        questionInput.value =
+                    if ($("question")) {
+
+                        $("question").value =
                             example;
                     }
 
-                    solveCurrentQuestion();
+                    handleSolve();
                 }
             );
         });
@@ -2738,7 +3436,7 @@ function setupExamples() {
 
 
 /* =========================================================
-   VOICE
+   VOICE INPUT
    ========================================================= */
 
 function setupVoice() {
@@ -2749,13 +3447,10 @@ function setupVoice() {
 
     if (!SpeechRecognition) {
 
-        if (voiceStatus) {
-            voiceStatus.textContent =
-                "Voice input is not supported in this browser.";
-        }
+        if ($("voiceStatus")) {
 
-        if (micBtn) {
-            micBtn.disabled = true;
+            $("voiceStatus").textContent =
+                TEXT[currentLanguage].voiceUnsupported;
         }
 
         return;
@@ -2765,7 +3460,10 @@ function setupVoice() {
         new SpeechRecognition();
 
     recognition.continuous = false;
+
     recognition.interimResults = false;
+
+    recognition.maxAlternatives = 1;
 
     recognition.lang =
         currentLanguage === "hi"
@@ -2776,63 +3474,66 @@ function setupVoice() {
 
         isListening = true;
 
-        if (micIcon) {
-            micIcon.textContent = "🔴";
+        if ($("micBtn")) {
+            $("micBtn").classList.add(
+                "listening"
+            );
         }
 
-        if (micText) {
-            micText.textContent =
-                TEXT[currentLanguage].listening;
+        if ($("micIcon")) {
+            $("micIcon").textContent =
+                "🔴";
         }
 
-        if (voiceStatus) {
-            voiceStatus.textContent =
+        if ($("micText")) {
+            $("micText").textContent =
+                "Listening...";
+        }
+
+        if ($("voiceStatus")) {
+            $("voiceStatus").textContent =
                 TEXT[currentLanguage].listening;
         }
     };
 
     recognition.onresult = event => {
 
-        let transcript = "";
+        const transcript =
+            event.results[0][0].transcript;
 
-        for (
-            let i = event.resultIndex;
-            i < event.results.length;
-            i++
-        ) {
-
-            transcript +=
-                event.results[i][0].transcript;
-        }
-
-        transcript =
+        const normalized =
             normalizeVoiceText(
                 transcript
             );
 
-        if (currentLanguage === "hi") {
-            transcript =
-                normalizeHindiNumbers(
-                    transcript
-                );
-        }
+        if ($("question")) {
 
-        if (questionInput) {
-            questionInput.value =
+            $("question").value =
+                normalized ||
                 transcript;
         }
 
+        /*
+         Auto solve after voice input.
+        */
+
         setTimeout(
-            solveCurrentQuestion,
-            200
+            handleSolve,
+            250
         );
     };
 
     recognition.onerror = event => {
 
-        if (voiceStatus) {
-            voiceStatus.textContent =
-                `Voice error: ${event.error}`;
+        console.warn(
+            "Voice error:",
+            event.error
+        );
+
+        if ($("voiceStatus")) {
+            $("voiceStatus").textContent =
+                "Voice error: " +
+                event.error;
         }
     };
 
@@ -2840,119 +3541,92 @@ function setupVoice() {
 
         isListening = false;
 
-        if (micIcon) {
-            micIcon.textContent = "🎤";
+        if ($("micBtn")) {
+            $("micBtn").classList.remove(
+                "listening"
+            );
         }
 
-        if (micText) {
-            micText.textContent =
-                TEXT[currentLanguage].micText;
+        if ($("micIcon")) {
+            $("micIcon").textContent =
+                "🎤";
         }
 
-        if (voiceStatus) {
-            voiceStatus.textContent =
-                TEXT[currentLanguage].micReady;
+        if ($("micText")) {
+            $("micText").textContent =
+                "Voice Input";
+        }
+
+        if ($("voiceStatus")) {
+            $("voiceStatus").textContent =
+                TEXT[currentLanguage].voiceReady;
         }
     };
 
-    if (micBtn) {
 
-        micBtn.addEventListener(
-            "click",
-            () => {
+    if ($("micBtn")) {
 
-                if (isListening) {
+        $("micBtn")
+            .addEventListener(
+                "click",
+                () => {
 
-                    recognition.stop();
+                    if (isListening) {
 
-                    return;
+                        recognition.stop();
+
+                        return;
+                    }
+
+                    recognition.lang =
+                        currentLanguage === "hi"
+                            ? "hi-IN"
+                            : "en-IN";
+
+                    try {
+
+                        recognition.start();
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Voice start error:",
+                            error
+                        );
+                    }
                 }
-
-                recognition.lang =
-                    currentLanguage === "hi"
-                        ? "hi-IN"
-                        : "en-IN";
-
-                recognition.start();
-            }
-        );
+            );
     }
 }
 
 
 /* =========================================================
-   HISTORY EVENTS
+   KEYBOARD SHORTCUT
    ========================================================= */
 
-function setupHistory() {
+function setupKeyboardShortcut() {
 
-    if (deleteAllBtn) {
-
-        deleteAllBtn.addEventListener(
-            "click",
-            clearHistory
-        );
-    }
-
-    if (!historyList) {
+    if (!$("question")) {
         return;
     }
 
-    historyList.addEventListener(
-        "click",
-        event => {
+    $("question")
+        .addEventListener(
+            "keydown",
+            event => {
 
-            const deleteButton =
-                event.target.closest(
-                    "[data-delete-id]"
-                );
+                if (
+                    (event.ctrlKey ||
+                        event.metaKey) &&
+                    event.key === "Enter"
+                ) {
 
-            if (deleteButton) {
+                    event.preventDefault();
 
-                deleteHistoryItem(
-                    Number(
-                        deleteButton.dataset.deleteId
-                    )
-                );
-
-                return;
-            }
-
-            const questionButton =
-                event.target.closest(
-                    "[data-history-id]"
-                );
-
-            if (questionButton) {
-
-                const id =
-                    Number(
-                        questionButton.dataset.historyId
-                    );
-
-                const item =
-                    getHistory()
-                        .find(
-                            entry =>
-                                entry.id === id
-                        );
-
-                if (!item) {
-                    return;
+                    handleSolve();
                 }
-
-                if (questionInput) {
-                    questionInput.value =
-                        item.question;
-                }
-
-                renderResult({
-                    answer: item.answer,
-                    steps: item.steps || []
-                });
             }
-        }
-    );
+        );
 }
 
 
@@ -2960,7 +3634,35 @@ function setupHistory() {
    PWA INSTALL
    ========================================================= */
 
+function isIOS() {
+
+    return /iphone|ipad|ipod/i.test(
+        navigator.userAgent
+    );
+}
+
+function isStandalone() {
+
+    return (
+        window.matchMedia &&
+        window.matchMedia(
+            "(display-mode: standalone)"
+        ).matches
+    ) ||
+    window.navigator.standalone === true;
+}
+
 function setupInstallPrompt() {
+
+    const installCard =
+        $("installCard");
+
+    const installButton =
+        $("installBtn");
+
+    if (!installCard) {
+        return;
+    }
 
     window.addEventListener(
         "beforeinstallprompt",
@@ -2971,15 +3673,54 @@ function setupInstallPrompt() {
             deferredInstallPrompt =
                 event;
 
-            if (installBtn) {
-                installBtn.hidden = false;
-            }
+            installCard.hidden = false;
         }
     );
 
-    if (installBtn) {
+    window.addEventListener(
+        "appinstalled",
+        () => {
 
-        installBtn.addEventListener(
+            deferredInstallPrompt =
+                null;
+
+            installCard.hidden = true;
+        }
+    );
+
+
+    if (
+        isIOS() &&
+        !isStandalone()
+    ) {
+
+        installCard.hidden = false;
+
+        if ($("iosInstallHelp")) {
+            $("iosInstallHelp").hidden =
+                false;
+        }
+
+        if (installButton) {
+            installButton.addEventListener(
+                "click",
+                () => {
+
+                    if ($("iosInstallHelp")) {
+                        $("iosInstallHelp").hidden =
+                            false;
+                    }
+                }
+            );
+        }
+
+        return;
+    }
+
+
+    if (installButton) {
+
+        installButton.addEventListener(
             "click",
             async () => {
 
@@ -2989,103 +3730,20 @@ function setupInstallPrompt() {
 
                 deferredInstallPrompt.prompt();
 
-                await deferredInstallPrompt.userChoice;
+                try {
+                    await deferredInstallPrompt.userChoice;
+                } catch (error) {
+                    console.warn(
+                        "Install prompt error:",
+                        error
+                    );
+                }
 
-                deferredInstallPrompt = null;
+                deferredInstallPrompt =
+                    null;
 
-                installBtn.hidden = true;
+                installCard.hidden = true;
             }
-        );
-    }
-
-    /*
-       iOS detection
-    */
-
-    const isIOS =
-        /iphone|ipad|ipod/i.test(
-            navigator.userAgent
-        );
-
-    const isStandalone =
-        window.navigator.standalone === true ||
-        window.matchMedia(
-            "(display-mode: standalone)"
-        ).matches;
-
-    if (
-        isIOS &&
-        !isStandalone &&
-        iosInstallHelp
-    ) {
-        iosInstallHelp.hidden = false;
-    }
-}
-
-
-/* =========================================================
-   KEYBOARD SHORTCUT
-   ========================================================= */
-
-function setupKeyboardShortcuts() {
-
-    if (!questionInput) {
-        return;
-    }
-
-    questionInput.addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                (event.ctrlKey || event.metaKey) &&
-                event.key === "Enter"
-            ) {
-
-                event.preventDefault();
-
-                solveCurrentQuestion();
-            }
-        }
-    );
-}
-
-
-/* =========================================================
-   BUTTON EVENTS
-   ========================================================= */
-
-function setupButtons() {
-
-    if (englishBtn) {
-
-        englishBtn.addEventListener(
-            "click",
-            () => setLanguage("en")
-        );
-    }
-
-    if (hindiBtn) {
-
-        hindiBtn.addEventListener(
-            "click",
-            () => setLanguage("hi")
-        );
-    }
-
-    if (solveBtn) {
-
-        solveBtn.addEventListener(
-            "click",
-            solveCurrentQuestion
-        );
-    }
-
-    if (clearBtn) {
-
-        clearBtn.addEventListener(
-            "click",
-            clearCurrentQuestion
         );
     }
 }
@@ -3093,65 +3751,297 @@ function setupButtons() {
 
 /* =========================================================
    SERVICE WORKER
+   ONLY REGISTER HERE
    ========================================================= */
 
 function registerServiceWorker() {
 
     if (
-        "serviceWorker" in navigator &&
-        location.protocol !== "file:"
+        !("serviceWorker" in navigator)
     ) {
+        return;
+    }
 
-        window.addEventListener(
-            "load",
+    /*
+     Do not register from file://
+    */
+
+    if (
+        window.location.protocol ===
+        "file:"
+    ) {
+        console.log(
+            "Math King: Service Worker skipped on file://"
+        );
+
+        return;
+    }
+
+    window.addEventListener(
+        "load",
+        async () => {
+
+            try {
+
+                const registration =
+                    await navigator.serviceWorker.register(
+                        "./service-worker.js",
+                        {
+                            scope: "./"
+                        }
+                    );
+
+                console.log(
+                    "Math King Service Worker:",
+                    registration.scope
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Math King Service Worker Error:",
+                    error
+                );
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   LANGUAGE BUTTONS
+   ========================================================= */
+
+function setupLanguageButtons() {
+
+    if ($("englishBtn")) {
+
+        $("englishBtn")
+            .addEventListener(
+                "click",
+                () => {
+
+                    setLanguage("en");
+
+                    if (recognition) {
+                        recognition.lang =
+                            "en-IN";
+                    }
+                }
+            );
+    }
+
+    if ($("hindiBtn")) {
+
+        $("hindiBtn")
+            .addEventListener(
+                "click",
+                () => {
+
+                    setLanguage("hi");
+
+                    if (recognition) {
+                        recognition.lang =
+                            "hi-IN";
+                    }
+                }
+            );
+    }
+}
+
+
+/* =========================================================
+   MAIN BUTTONS
+   ========================================================= */
+
+function setupMainButtons() {
+
+    if ($("solveBtn")) {
+
+        $("solveBtn")
+            .addEventListener(
+                "click",
+                handleSolve
+            );
+    }
+
+    if ($("clearBtn")) {
+
+        $("clearBtn")
+            .addEventListener(
+                "click",
+                clearInput
+            );
+    }
+
+    if ($("clearHistoryBtn")) {
+
+        $("clearHistoryBtn")
+            .addEventListener(
+                "click",
+                clearHistory
+            );
+    }
+
+    if ($("historyList")) {
+
+        $("historyList")
+            .addEventListener(
+                "click",
+                handleHistoryClick
+            );
+    }
+}
+
+
+/* =========================================================
+   INPUT ENTER / AUTO FEATURES
+   ========================================================= */
+
+function setupInput() {
+
+    if (!$("question")) {
+        return;
+    }
+
+    $("question")
+        .addEventListener(
+            "input",
             () => {
 
-                navigator.serviceWorker
-                    .register("./service-worker.js")
-                    .then(registration => {
+                /*
+                 Hide old result when
+                 user starts a new question.
+                */
 
-                        console.log(
-                            "Math King Service Worker:",
-                            registration.scope
-                        );
-
-                    })
-                    .catch(error => {
-
-                        console.error(
-                            "Math King Service Worker Error:",
-                            error
-                        );
-                    });
+                if ($("resultSection")) {
+                    $("resultSection").hidden = true;
+                }
             }
+        );
+}
+
+
+/* =========================================================
+   TEST ENGINE
+   ========================================================= */
+
+function runInternalTests() {
+
+    try {
+
+        const test1 =
+            solveQuestion(
+                "Simplify: 4(2x - 3) - 2(x + 5)"
+            );
+
+        console.log(
+            "TEST 1:",
+            test1.answer
+        );
+
+        const test2 =
+            solveQuestion(
+                "2x + 5 = 15"
+            );
+
+        console.log(
+            "TEST 2:",
+            test2.answer
+        );
+
+        const test3 =
+            solveQuestion(
+                "(x + 2)(x + 3)"
+            );
+
+        console.log(
+            "TEST 3:",
+            test3.answer
+        );
+
+        const test4 =
+            solveQuestion(
+                "Evaluate: (-6) × (-4) + (-20) ÷ 4"
+            );
+
+        console.log(
+            "TEST 4:",
+            test4.answer
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Math King internal test:",
+            error
         );
     }
 }
 
 
 /* =========================================================
-   INIT
+   INITIALIZATION
    ========================================================= */
 
 function initMathKing() {
 
     setLanguage("en");
 
-    setupButtons();
+    setupLanguageButtons();
+
+    setupMainButtons();
+
     setupMathKeyboard();
+
     setupExamples();
+
     setupVoice();
-    setupHistory();
+
+    setupKeyboardShortcut();
+
+    setupInput();
+
     setupInstallPrompt();
-    setupKeyboardShortcuts();
+
     registerServiceWorker();
 
     renderHistory();
 
+    runInternalTests();
+
     console.log(
-        "Math King Advanced Mathematics Engine Ready."
+        "Math King initialized successfully."
     );
 }
+
+
+/* =========================================================
+   PUBLIC API
+   ========================================================= */
+
+window.MathKing = {
+
+    version: "4.0",
+
+    solve: solveQuestion,
+
+    simplify: solveAlgebraSimplification,
+
+    solveEquation: solveLinearEquation,
+
+    solveQuadratic: solveQuadraticEquation,
+
+    percentage: solvePercentage,
+
+    average: solveAverage,
+
+    hcf: solveHCF,
+
+    lcm: solveLCM,
+
+    bodmas: solveBODMAS
+};
 
 
 /* =========================================================
@@ -3171,19 +4061,3 @@ if (
 
     initMathKing();
 }
-
-
-/* =========================================================
-   PUBLIC API
-   ========================================================= */
-
-window.MathKing = {
-    solve: solveQuestion,
-    simplify: solveAlgebraSimplification,
-    solveEquation: solveLinearEquation,
-    solveQuadratic,
-    percentage: solvePercentage,
-    average: solveAverage,
-    hcf: solveHCF,
-    lcm: solveLCM
-};
